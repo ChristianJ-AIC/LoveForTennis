@@ -8,13 +8,13 @@ namespace LoveForTennis.Web.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
 
-    public HomeController(ILogger<HomeController> logger, HttpClient httpClient, IConfiguration configuration)
+    public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
         _logger = logger;
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
         _configuration = configuration;
     }
 
@@ -22,8 +22,9 @@ public class HomeController : Controller
     {
         try
         {
+            var httpClient = _httpClientFactory.CreateClient();
             var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7111";
-            var response = await _httpClient.GetAsync($"{apiBaseUrl}/api/dummy");
+            var response = await httpClient.GetAsync($"{apiBaseUrl}/api/dummy");
             
             if (response.IsSuccessStatusCode)
             {
