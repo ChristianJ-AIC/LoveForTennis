@@ -1,0 +1,426 @@
+// Authentication JavaScript functionality
+let currentUser = null;
+const apiBaseUrl = 'http://localhost:7111'; // API base URL
+
+// Initialize authentication state on page load
+$(document).ready(function() {
+    checkAuthenticationStatus();
+    setupEventHandlers();
+});
+
+// Setup event handlers for forms and modals
+function setupEventHandlers() {
+    // Login form submission
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+        handleLogin();
+    });
+
+    // Register form submission
+    $('#registerForm').on('submit', function(e) {
+        e.preventDefault();
+        handleRegister();
+    });
+
+    // Forgot password form submission
+    $('#forgotPasswordForm').on('submit', function(e) {
+        e.preventDefault();
+        handleForgotPassword();
+    });
+
+    // Reset password form submission
+    $('#resetPasswordForm').on('submit', function(e) {
+        e.preventDefault();
+        handleResetPassword();
+    });
+
+    // Logout link
+    $('#logout-link').on('click', function(e) {
+        e.preventDefault();
+        handleLogout();
+    });
+
+    // Account details link
+    $('#account-details-link').on('click', function(e) {
+        e.preventDefault();
+        window.location.href = '/Account/Details';
+    });
+
+    // Payment info link
+    $('#payment-info-link').on('click', function(e) {
+        e.preventDefault();
+        window.location.href = '/Account/Payment';
+    });
+
+    // Password confirmation validation
+    $('#registerConfirmPassword, #confirmNewPassword').on('input', function() {
+        validatePasswordConfirmation(this);
+    });
+}
+
+// Check current authentication status
+async function checkAuthenticationStatus() {
+    try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/profile`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const userInfo = await response.json();
+            currentUser = userInfo;
+            updateUIForAuthenticatedUser();
+        } else {
+            currentUser = null;
+            updateUIForUnauthenticatedUser();
+        }
+    } catch (error) {
+        console.error('Error checking authentication status:', error);
+        currentUser = null;
+        updateUIForUnauthenticatedUser();
+    }
+}
+
+// Update UI for authenticated user
+function updateUIForAuthenticatedUser() {
+    // Hide login/register menu items
+    $('#login-menu, #register-menu').addClass('d-none');
+    
+    // Show authenticated menu items
+    $('#authenticated-menu, #payment-info-menu, #logout-menu, #logout-menu-item').removeClass('d-none');
+}
+
+// Update UI for unauthenticated user
+function updateUIForUnauthenticatedUser() {
+    // Show login/register menu items
+    $('#login-menu, #register-menu').removeClass('d-none');
+    
+    // Hide authenticated menu items
+    $('#authenticated-menu, #payment-info-menu, #logout-menu, #logout-menu-item').addClass('d-none');
+}
+
+// Handle login form submission
+async function handleLogin() {
+    const email = $('#loginEmail').val();
+    const password = $('#loginPassword').val();
+    const rememberMe = $('#rememberMe').is(':checked');
+
+    // Clear previous errors
+    clearErrors('login');
+
+    // Client-side validation
+    if (!validateEmail(email)) {
+        showFieldError('loginEmail', 'Please enter a valid email address.');
+        return;
+    }
+    if (!password) {
+        showFieldError('loginPassword', 'Password is required.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                rememberMe: rememberMe
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            currentUser = result.user;
+            updateUIForAuthenticatedUser();
+            hideModal('loginModal');
+            showSuccessMessage('login', 'Login successful!');
+            $('#loginForm')[0].reset();
+            // Reload page to update any authentication-dependent content
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showErrorMessage('login', result.message);
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showErrorMessage('login', 'An error occurred during login. Please try again.');
+    }
+}
+
+// Handle register form submission
+async function handleRegister() {
+    const firstName = $('#registerFirstName').val();
+    const lastName = $('#registerLastName').val();
+    const email = $('#registerEmail').val();
+    const password = $('#registerPassword').val();
+    const confirmPassword = $('#registerConfirmPassword').val();
+
+    // Clear previous errors
+    clearErrors('register');
+
+    // Client-side validation
+    if (!firstName.trim()) {
+        showFieldError('registerFirstName', 'First name is required.');
+        return;
+    }
+    if (!lastName.trim()) {
+        showFieldError('registerLastName', 'Last name is required.');
+        return;
+    }
+    if (!validateEmail(email)) {
+        showFieldError('registerEmail', 'Please enter a valid email address.');
+        return;
+    }
+    if (password.length < 8) {
+        showFieldError('registerPassword', 'Password must be at least 8 characters long.');
+        return;
+    }
+    if (password !== confirmPassword) {
+        showFieldError('registerConfirmPassword', 'Passwords do not match.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                password: password,
+                confirmPassword: confirmPassword
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showSuccessMessage('register', 'Registration successful! You can now login.');
+            $('#registerForm')[0].reset();
+            setTimeout(() => showLoginModal(), 2000);
+        } else {
+            showErrorMessage('register', result.message);
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        showErrorMessage('register', 'An error occurred during registration. Please try again.');
+    }
+}
+
+// Handle forgot password form submission
+async function handleForgotPassword() {
+    const email = $('#forgotPasswordEmail').val();
+
+    // Clear previous errors
+    clearErrors('forgotPassword');
+
+    // Client-side validation
+    if (!validateEmail(email)) {
+        showFieldError('forgotPasswordEmail', 'Please enter a valid email address.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/forgot-password`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showSuccessMessage('forgotPassword', result.message);
+            $('#forgotPasswordForm')[0].reset();
+            
+            // For demo purposes, if a token is returned, show reset password modal
+            if (result.token) {
+                setTimeout(() => {
+                    $('#resetEmail').val(email);
+                    $('#resetToken').val(result.token);
+                    showResetPasswordModal();
+                }, 2000);
+            }
+        } else {
+            showErrorMessage('forgotPassword', result.message);
+        }
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        showErrorMessage('forgotPassword', 'An error occurred while processing your request. Please try again.');
+    }
+}
+
+// Handle reset password form submission
+async function handleResetPassword() {
+    const email = $('#resetEmail').val();
+    const token = $('#resetToken').val();
+    const newPassword = $('#newPassword').val();
+    const confirmPassword = $('#confirmNewPassword').val();
+
+    // Clear previous errors
+    clearErrors('resetPassword');
+
+    // Client-side validation
+    if (newPassword.length < 8) {
+        showFieldError('newPassword', 'Password must be at least 8 characters long.');
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        showFieldError('confirmNewPassword', 'Passwords do not match.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/reset-password`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                token: token,
+                newPassword: newPassword,
+                confirmPassword: confirmPassword
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showSuccessMessage('resetPassword', 'Password reset successful! You can now login with your new password.');
+            $('#resetPasswordForm')[0].reset();
+            setTimeout(() => showLoginModal(), 2000);
+        } else {
+            showErrorMessage('resetPassword', result.message);
+        }
+    } catch (error) {
+        console.error('Reset password error:', error);
+        showErrorMessage('resetPassword', 'An error occurred while resetting your password. Please try again.');
+    }
+}
+
+// Handle logout
+async function handleLogout() {
+    try {
+        // For the web app, we'll use the MVC logout route which handles cookies properly
+        const response = await fetch('/Account/Logout', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                '__RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+            })
+        });
+
+        // Always update UI to logged out state and reload
+        currentUser = null;
+        updateUIForUnauthenticatedUser();
+        location.reload();
+    } catch (error) {
+        console.error('Logout error:', error);
+        // Still log out on client side
+        currentUser = null;
+        updateUIForUnauthenticatedUser();
+        location.reload();
+    }
+}
+
+// Modal navigation functions
+function showLoginModal() {
+    hideAllModals();
+    new bootstrap.Modal(document.getElementById('loginModal')).show();
+}
+
+function showRegisterModal() {
+    hideAllModals();
+    new bootstrap.Modal(document.getElementById('registerModal')).show();
+}
+
+function showForgotPasswordModal() {
+    hideAllModals();
+    new bootstrap.Modal(document.getElementById('forgotPasswordModal')).show();
+}
+
+function showResetPasswordModal() {
+    hideAllModals();
+    new bootstrap.Modal(document.getElementById('resetPasswordModal')).show();
+}
+
+function hideAllModals() {
+    const modals = ['loginModal', 'registerModal', 'forgotPasswordModal', 'resetPasswordModal'];
+    modals.forEach(modalId => hideModal(modalId));
+}
+
+function hideModal(modalId) {
+    const modalElement = document.getElementById(modalId);
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+        modal.hide();
+    }
+}
+
+// Utility functions
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validatePasswordConfirmation(element) {
+    const isRegisterForm = element.id === 'registerConfirmPassword';
+    const passwordId = isRegisterForm ? 'registerPassword' : 'newPassword';
+    const password = $(`#${passwordId}`).val();
+    const confirmPassword = $(element).val();
+
+    if (confirmPassword && password !== confirmPassword) {
+        showFieldError(element.id, 'Passwords do not match.');
+    } else {
+        clearFieldError(element.id);
+    }
+}
+
+function showFieldError(fieldId, message) {
+    const field = $(`#${fieldId}`);
+    field.addClass('is-invalid');
+    field.siblings('.invalid-feedback').text(message);
+}
+
+function clearFieldError(fieldId) {
+    const field = $(`#${fieldId}`);
+    field.removeClass('is-invalid');
+    field.siblings('.invalid-feedback').text('');
+}
+
+function clearErrors(formType) {
+    $(`#${formType}Modal .is-invalid`).removeClass('is-invalid');
+    $(`#${formType}Modal .invalid-feedback`).text('');
+    $(`#${formType}Error, #${formType}Success`).addClass('d-none');
+}
+
+function showErrorMessage(formType, message) {
+    $(`#${formType}Error`).text(message).removeClass('d-none');
+    $(`#${formType}Success`).addClass('d-none');
+}
+
+function showSuccessMessage(formType, message) {
+    $(`#${formType}Success`).text(message).removeClass('d-none');
+    $(`#${formType}Error`).addClass('d-none');
+}
