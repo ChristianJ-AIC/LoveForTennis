@@ -1,0 +1,57 @@
+@model List<LoveForTennis.Web.Models.DummyDto>
+@{
+    ViewData["Title"] = "Love For Tennis - Home";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to Love For Tennis</h1>
+    <p class="lead">Your passion for tennis starts here!</p>
+</div>
+
+<div class="container mt-5">
+    <h2>Tennis Equipment & Facilities</h2>
+    
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Name</h5>
+                            <p class="card-text">@item.Description</p>
+                            <small class="text-muted">Added: @item.CreatedAt.ToString("MMM dd, yyyy")</small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">No Data Available</h4>
+            <p>We're currently unable to load tennis equipment data. Please check that the API is running and try again.</p>
+        </div>
+    }
+</div>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <h3>About Love For Tennis</h3>
+            <p>This application demonstrates a complete Onion Architecture implementation using ASP.NET Core. The data you see above is fetched from our API, which retrieves information from our database through a clean, layered architecture.</p>
+        </div>
+        <div class="col-md-6">
+            <h3>Architecture Layers</h3>
+            <ul class="list-group">
+                <li class="list-group-item"><strong>Web Layer:</strong> This MVC application</li>
+                <li class="list-group-item"><strong>API Layer:</strong> REST API endpoints</li>
+                <li class="list-group-item"><strong>Application Layer:</strong> Business logic and services</li>
+                <li class="list-group-item"><strong>Infrastructure Layer:</strong> Data access and repositories</li>
+                <li class="list-group-item"><strong>Core Layer:</strong> Domain models and interfaces</li>
+            </ul>
+        </div>
+    </div>
+</div>
