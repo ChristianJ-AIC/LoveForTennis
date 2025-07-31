@@ -1,0 +1,6 @@
+@LoveForTennis.API_HostAddress = http://localhost:5091
+
+GET {{LoveForTennis.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
