@@ -1,9 +1,10 @@
 // Authentication JavaScript functionality
 let currentUser = null;
 const apiBaseUrl = 'http://localhost:7111'; // API base URL
+/*const apiBaseUrl = 'http://localhost:5091'; // API base URL*/
 
 // Initialize authentication state on page load
-$(document).ready(function() {
+$(function () {
     checkAuthenticationStatus();
     setupEventHandlers();
 });

@@ -71,7 +71,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", builder =>
     {
         builder
-            .WithOrigins("https://localhost:5001", "http://localhost:5000") // Web app URLs
+            .WithOrigins("https://localhost:5001", "http://localhost:5213") // Web app URLs
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();

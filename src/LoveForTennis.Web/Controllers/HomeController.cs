@@ -23,7 +23,7 @@ public class HomeController : Controller
         try
         {
             var httpClient = _httpClientFactory.CreateClient();
-            var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7111";
+            var apiBaseUrl = _configuration["ApiSettings:BaseUrl"];  // ?? "https://localhost:7111";
             var response = await httpClient.GetAsync($"{apiBaseUrl}/api/dummy");
             
             if (response.IsSuccessStatusCode)
