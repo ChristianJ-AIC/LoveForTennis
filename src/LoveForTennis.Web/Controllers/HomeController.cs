@@ -10,12 +10,14 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
-    public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration, IWebHostEnvironment environment)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
+        _environment = environment;
     }
 
     public async Task<IActionResult> Index()
@@ -57,6 +59,10 @@ public class HomeController : Controller
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View(new ErrorViewModel 
+        { 
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+            IsDevelopment = _environment.IsDevelopment()
+        });
     }
 }
