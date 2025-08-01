@@ -1,0 +1,103 @@
+@model LoveForTennis.Core.Models.UserInfo
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user me-2"></i>My Profile
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (Model != null)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Email:</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                @Model.Email
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>First Name:</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                @Model.FirstName
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Last Name:</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                @Model.LastName
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Member Since:</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                @Model.CreatedAt.ToString("MMMM dd, yyyy")
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Unable to load profile information. Please try again.
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Home
+                        </a>
+                        <div>
+                            <a href="@Url.Action("Payment", "Account")" class="btn btn-info me-2">
+                                <i class="fas fa-credit-card me-2"></i>Payment Info
+                            </a>
+                            <a href="@Url.Action("SignUps", "Account")" class="btn btn-success me-2">
+                                <i class="fas fa-calendar-check me-2"></i>Sign Ups
+                            </a>
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                <i class="fas fa-edit me-2"></i>Edit Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal (placeholder for future implementation) -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Profile editing functionality will be available in a future update.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
