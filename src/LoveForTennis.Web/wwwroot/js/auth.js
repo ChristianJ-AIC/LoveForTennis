@@ -41,24 +41,6 @@ function setupEventHandlers() {
         handleLogout();
     });
 
-    // Profile link
-    $('#profile-link').on('click', function(e) {
-        e.preventDefault();
-        window.location.href = '/Account/Profile';
-    });
-
-    // Payment link
-    $('#payment-link').on('click', function(e) {
-        e.preventDefault();
-        window.location.href = '/Account/Payment';
-    });
-
-    // Sign ups link
-    $('#signups-link').on('click', function(e) {
-        e.preventDefault();
-        window.location.href = '/Account/SignUps';
-    });
-
     // Password confirmation validation
     $('#registerConfirmPassword, #confirmNewPassword').on('input', function() {
         validatePasswordConfirmation(this);
