@@ -341,10 +341,9 @@ async function handleLogout() {
         const csrfToken = $('input[name="__RequestVerificationToken"]').val();
         
         if (!csrfToken) {
-            console.warn('CSRF token not found, falling back to page reload');
+            console.warn('CSRF token not found, redirecting to front page');
             currentUser = null;
-            updateUIForUnauthenticatedUser();
-            location.reload();
+            window.location.href = '/';
             return;
         }
 
@@ -361,34 +360,25 @@ async function handleLogout() {
         });
 
         if (response.ok) {
-            // Successful logout - update UI without page reload
+            // Successful logout - redirect to front page
             currentUser = null;
             
             // Hide any open modals
             hideAllModals();
             
-            // Check authentication status to update UI properly
-            await checkAuthenticationStatus();
-            
-            // Show confirmation message
-            if ($('#logoutSuccess').length === 0) {
-                $('body').prepend('<div id="logoutSuccess" class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert"><i class="fas fa-check-circle me-2"></i>Successfully logged out!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
-                // Auto-hide after 3 seconds
-                setTimeout(() => $('#logoutSuccess').alert('close'), 3000);
-            }
+            // Redirect to front page
+            window.location.href = '/';
         } else {
-            // Logout failed on server - fallback to page reload
-            console.warn('Logout response not OK, falling back to page reload');
+            // Logout failed on server - fallback to redirect to front page
+            console.warn('Logout response not OK, falling back to redirect');
             currentUser = null;
-            updateUIForUnauthenticatedUser();
-            location.reload();
+            window.location.href = '/';
         }
     } catch (error) {
         console.error('Logout error:', error);
-        // Network error - fallback to page reload for safety
+        // Network error - fallback to redirect to front page for safety
         currentUser = null;
-        updateUIForUnauthenticatedUser();
-        location.reload();
+        window.location.href = '/';
     }
 }
 
