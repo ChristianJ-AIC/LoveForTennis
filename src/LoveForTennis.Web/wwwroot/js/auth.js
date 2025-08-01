@@ -337,7 +337,18 @@ async function handleResetPassword() {
 // Handle logout
 async function handleLogout() {
     try {
-        // For the web app, we'll use the MVC logout route which handles cookies properly
+        // Get CSRF token from the page
+        const csrfToken = $('input[name="__RequestVerificationToken"]').val();
+        
+        if (!csrfToken) {
+            console.warn('CSRF token not found, falling back to page reload');
+            currentUser = null;
+            updateUIForUnauthenticatedUser();
+            location.reload();
+            return;
+        }
+
+        // Make the logout request with proper CSRF token
         const response = await fetch('/Account/Logout', {
             method: 'POST',
             credentials: 'include',
@@ -345,17 +356,36 @@ async function handleLogout() {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({
-                '__RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+                '__RequestVerificationToken': csrfToken
             })
         });
 
-        // Always update UI to logged out state and reload
-        currentUser = null;
-        updateUIForUnauthenticatedUser();
-        location.reload();
+        if (response.ok) {
+            // Successful logout - update UI without page reload
+            currentUser = null;
+            
+            // Hide any open modals
+            hideAllModals();
+            
+            // Check authentication status to update UI properly
+            await checkAuthenticationStatus();
+            
+            // Show confirmation message
+            if ($('#logoutSuccess').length === 0) {
+                $('body').prepend('<div id="logoutSuccess" class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;" role="alert"><i class="fas fa-check-circle me-2"></i>Successfully logged out!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
+                // Auto-hide after 3 seconds
+                setTimeout(() => $('#logoutSuccess').alert('close'), 3000);
+            }
+        } else {
+            // Logout failed on server - fallback to page reload
+            console.warn('Logout response not OK, falling back to page reload');
+            currentUser = null;
+            updateUIForUnauthenticatedUser();
+            location.reload();
+        }
     } catch (error) {
         console.error('Logout error:', error);
-        // Still log out on client side
+        // Network error - fallback to page reload for safety
         currentUser = null;
         updateUIForUnauthenticatedUser();
         location.reload();
