@@ -40,16 +40,22 @@ function setupEventHandlers() {
         handleLogout();
     });
 
-    // Account details link
-    $('#account-details-link').on('click', function(e) {
+    // Profile link
+    $('#profile-link').on('click', function(e) {
         e.preventDefault();
-        window.location.href = '/Account/Details';
+        window.location.href = '/Account/Profile';
     });
 
-    // Payment info link
-    $('#payment-info-link').on('click', function(e) {
+    // Payment link
+    $('#payment-link').on('click', function(e) {
         e.preventDefault();
         window.location.href = '/Account/Payment';
+    });
+
+    // Sign ups link
+    $('#signups-link').on('click', function(e) {
+        e.preventDefault();
+        window.location.href = '/Account/SignUps';
     });
 
     // Password confirmation validation
@@ -90,7 +96,7 @@ function updateUIForAuthenticatedUser() {
     $('#login-menu, #register-menu').addClass('d-none');
     
     // Show authenticated menu items
-    $('#authenticated-menu, #payment-info-menu, #logout-menu, #logout-menu-item').removeClass('d-none');
+    $('#profile-menu, #payment-menu, #signups-menu, #logout-menu, #logout-menu-item').removeClass('d-none');
 }
 
 // Update UI for unauthenticated user
@@ -99,7 +105,7 @@ function updateUIForUnauthenticatedUser() {
     $('#login-menu, #register-menu').removeClass('d-none');
     
     // Hide authenticated menu items
-    $('#authenticated-menu, #payment-info-menu, #logout-menu, #logout-menu-item').addClass('d-none');
+    $('#profile-menu, #payment-menu, #signups-menu, #logout-menu, #logout-menu-item').addClass('d-none');
 }
 
 // Handle login form submission
