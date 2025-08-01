@@ -1,7 +1,7 @@
 // Authentication JavaScript functionality
 let currentUser = null;
-const apiBaseUrl = 'http://localhost:7111'; // API base URL
-/*const apiBaseUrl = 'http://localhost:5091'; // API base URL*/
+/*const apiBaseUrl = 'http://localhost:7111'; // API base URL*/
+const apiBaseUrl = 'http://localhost:5091'; // API base URL
 
 // Initialize authentication state on page load
 $(function () {
@@ -62,12 +62,20 @@ async function checkAuthenticationStatus() {
             const userInfo = await response.json();
             currentUser = userInfo;
             updateUIForAuthenticatedUser();
+        } else if (response.status === 401) {
+            // Properly unauthenticated
+            currentUser = null;
+            updateUIForUnauthenticatedUser();
         } else {
+            // Network or other error - don't change current state
+            console.error('Error checking authentication status:', response.status, response.statusText);
+            // Assume unauthenticated for safety but don't log error
             currentUser = null;
             updateUIForUnauthenticatedUser();
         }
     } catch (error) {
         console.error('Error checking authentication status:', error);
+        // Network error - assume unauthenticated for safety
         currentUser = null;
         updateUIForUnauthenticatedUser();
     }
@@ -132,8 +140,7 @@ async function handleLogin() {
             hideModal('loginModal');
             showSuccessMessage('login', 'Login successful!');
             $('#loginForm')[0].reset();
-            // Reload page to update any authentication-dependent content
-            setTimeout(() => location.reload(), 1000);
+            // No need to reload - UI should update properly
         } else {
             showErrorMessage('login', result.message);
         }
