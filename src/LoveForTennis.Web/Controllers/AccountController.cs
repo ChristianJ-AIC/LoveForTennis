@@ -35,6 +35,28 @@ public class AccountController : Controller
         return View(userInfo);
     }
 
+    public async Task<IActionResult> Profile()
+    {
+        // Profile redirects to Details for now to maintain existing functionality
+        return await Details();
+    }
+
+    public async Task<IActionResult> SignUps()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        // For now, we'll show a placeholder page
+        // In a real application, you would fetch user's sign-ups/bookings
+        ViewBag.UserEmail = user.Email;
+        ViewBag.UserName = $"{user.FirstName} {user.LastName}";
+        
+        return View();
+    }
+
     public async Task<IActionResult> Payment()
     {
         var user = await _userManager.GetUserAsync(User);
