@@ -1,13 +1,36 @@
 // Authentication JavaScript functionality
 let currentUser = null;
-/*const apiBaseUrl = 'http://localhost:7111'; // API base URL*/
-const apiBaseUrl = 'http://localhost:5091'; // API base URL
+const baseUrl = ''; // Use web application base URL
 
 // Initialize authentication state on page load
 $(function () {
     checkAuthenticationStatus();
     setupEventHandlers();
+    setupNavigationHandlers();
 });
+
+// Setup navigation event handlers for browser back/forward buttons
+function setupNavigationHandlers() {
+    // Handle browser back/forward navigation
+    window.addEventListener('popstate', function(event) {
+        // Re-check authentication status when navigating with browser buttons
+        checkAuthenticationStatus();
+    });
+    
+    // Handle page visibility changes (when returning to tab)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // Re-check authentication status when tab becomes visible
+            checkAuthenticationStatus();
+        }
+    });
+    
+    // Handle page show event (for browser back/forward cache)
+    window.addEventListener('pageshow', function(event) {
+        // Re-check authentication status when page is shown from cache
+        checkAuthenticationStatus();
+    });
+}
 
 // Setup event handlers for forms and modals
 function setupEventHandlers() {
@@ -50,7 +73,7 @@ function setupEventHandlers() {
 // Check current authentication status
 async function checkAuthenticationStatus() {
     try {
-        const response = await fetch(`${apiBaseUrl}/api/auth/profile`, {
+        const response = await fetch(`${baseUrl}/Account/ProfileStatus`, {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -59,17 +82,16 @@ async function checkAuthenticationStatus() {
         });
 
         if (response.ok) {
-            const userInfo = await response.json();
-            currentUser = userInfo;
-            updateUIForAuthenticatedUser();
-        } else if (response.status === 401) {
-            // Properly unauthenticated
-            currentUser = null;
-            updateUIForUnauthenticatedUser();
+            const result = await response.json();
+            if (result.authenticated && result.user) {
+                currentUser = result.user;
+                updateUIForAuthenticatedUser();
+            } else {
+                currentUser = null;
+                updateUIForUnauthenticatedUser();
+            }
         } else {
-            // Network or other error - don't change current state
-            console.error('Error checking authentication status:', response.status, response.statusText);
-            // Assume unauthenticated for safety but don't log error
+            // Error checking status - assume unauthenticated
             currentUser = null;
             updateUIForUnauthenticatedUser();
         }
@@ -119,7 +141,7 @@ async function handleLogin() {
     }
 
     try {
-        const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+        const response = await fetch(`${baseUrl}/Account/Login`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -184,7 +206,7 @@ async function handleRegister() {
     }
 
     try {
-        const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+        const response = await fetch(`${baseUrl}/Account/Register`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -228,7 +250,7 @@ async function handleForgotPassword() {
     }
 
     try {
-        const response = await fetch(`${apiBaseUrl}/api/auth/forgot-password`, {
+        const response = await fetch(`${baseUrl}/Account/ForgotPassword`, {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -283,7 +305,7 @@ async function handleResetPassword() {
     }
 
     try {
-        const response = await fetch(`${apiBaseUrl}/api/auth/reset-password`, {
+        const response = await fetch(`${baseUrl}/Account/ResetPassword`, {
             method: 'POST',
             credentials: 'include',
             headers: {
