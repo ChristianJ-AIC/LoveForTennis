@@ -82,4 +82,5 @@ public class UserInfo
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public IList<string> Roles { get; set; } = new List<string>();
 }

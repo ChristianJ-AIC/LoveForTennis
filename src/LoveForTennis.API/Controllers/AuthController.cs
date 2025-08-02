@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LoveForTennis.Application.Interfaces;
 using LoveForTennis.Core.Models;
+using LoveForTennis.Core.Constants;
 using System.Security.Claims;
 
 namespace LoveForTennis.API.Controllers;
@@ -102,7 +103,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("profile")]
-    [Authorize]
+    [Authorize(Policy = "RequirePlayerRole")]
     public async Task<ActionResult<UserInfo>> GetProfile()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -121,7 +122,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
-    [Authorize]
+    [Authorize(Policy = "RequirePlayerRole")]
     public IActionResult Logout()
     {
         // For cookie-based authentication, sign out the user

@@ -4,6 +4,7 @@ using LoveForTennis.Application.Interfaces;
 using LoveForTennis.Application.Services;
 using LoveForTennis.Core.Interfaces;
 using LoveForTennis.Core.Entities;
+using LoveForTennis.Core.Constants;
 using LoveForTennis.Infrastructure.Data;
 using LoveForTennis.Infrastructure.Repositories;
 
@@ -64,10 +65,18 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IDummyRepository, DummyRepository>();
 builder.Services.AddScoped<IDummyService, DummyService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IBookingPlayerRepository, BookingPlayerRepository>();
 builder.Services.AddScoped<IBookingPlayerService, BookingPlayerService>();
+
+// Add authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequirePlayerRole", policy =>
+        policy.RequireClaim("role", UserRoles.Player));
+});
 
 // Add CORS
 builder.Services.AddCors(options =>
