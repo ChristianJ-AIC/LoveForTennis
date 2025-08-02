@@ -64,6 +64,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IDummyRepository, DummyRepository>();
 builder.Services.AddScoped<IDummyService, DummyService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IBookingPlayerRepository, BookingPlayerRepository>();
+builder.Services.AddScoped<IBookingPlayerService, BookingPlayerService>();
 
 // Add CORS
 builder.Services.AddCors(options =>
