@@ -141,12 +141,22 @@ async function handleLogin() {
     }
 
     try {
+        // Get CSRF token
+        const csrfToken = $('input[name="__RequestVerificationToken"]').val();
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // Add CSRF token to headers if available
+        if (csrfToken) {
+            headers['RequestVerificationToken'] = csrfToken;
+        }
+
         const response = await fetch(`${baseUrl}/Account/Login`, {
             method: 'POST',
             credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({
                 email: email,
                 password: password,
@@ -206,12 +216,22 @@ async function handleRegister() {
     }
 
     try {
+        // Get CSRF token
+        const csrfToken = $('input[name="__RequestVerificationToken"]').val();
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // Add CSRF token to headers if available
+        if (csrfToken) {
+            headers['RequestVerificationToken'] = csrfToken;
+        }
+
         const response = await fetch(`${baseUrl}/Account/Register`, {
             method: 'POST',
             credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({
                 firstName: firstName,
                 lastName: lastName,
@@ -250,12 +270,22 @@ async function handleForgotPassword() {
     }
 
     try {
+        // Get CSRF token
+        const csrfToken = $('input[name="__RequestVerificationToken"]').val();
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // Add CSRF token to headers if available
+        if (csrfToken) {
+            headers['RequestVerificationToken'] = csrfToken;
+        }
+
         const response = await fetch(`${baseUrl}/Account/ForgotPassword`, {
             method: 'POST',
             credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({
                 email: email
             })
@@ -305,12 +335,22 @@ async function handleResetPassword() {
     }
 
     try {
+        // Get CSRF token
+        const csrfToken = $('input[name="__RequestVerificationToken"]').val();
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // Add CSRF token to headers if available
+        if (csrfToken) {
+            headers['RequestVerificationToken'] = csrfToken;
+        }
+
         const response = await fetch(`${baseUrl}/Account/ResetPassword`, {
             method: 'POST',
             credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({
                 email: email,
                 token: token,
