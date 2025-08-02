@@ -4,6 +4,8 @@ using LoveForTennis.Core.Entities;
 using LoveForTennis.Infrastructure.Data;
 using LoveForTennis.Application.Interfaces;
 using LoveForTennis.Application.Services;
+using LoveForTennis.Core.Interfaces;
+using LoveForTennis.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +61,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Add Auth service
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Add Booking services
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IBookingPlayerRepository, BookingPlayerRepository>();
+builder.Services.AddScoped<IBookingPlayerService, BookingPlayerService>();
 
 var app = builder.Build();
 
