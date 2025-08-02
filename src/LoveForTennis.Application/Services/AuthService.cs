@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using LoveForTennis.Application.Interfaces;
 using LoveForTennis.Core.Entities;
 using LoveForTennis.Core.Models;
+using LoveForTennis.Core.Constants;
 using Microsoft.Extensions.Logging;
 
 namespace LoveForTennis.Application.Services;
@@ -9,13 +10,16 @@ namespace LoveForTennis.Application.Services;
 public class AuthService : IAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IRoleService _roleService;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
+        IRoleService roleService,
         ILogger<AuthService> logger)
     {
         _userManager = userManager;
+        _roleService = roleService;
         _logger = logger;
     }
 
@@ -46,6 +50,8 @@ public class AuthService : IAuthService
             user.LastLoginAt = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
+            var userRoles = await _roleService.GetUserRolesAsync(user);
+
             return new AuthResponse
             {
                 Success = true,
@@ -56,7 +62,8 @@ public class AuthService : IAuthService
                     Email = user.Email!,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    CreatedAt = user.CreatedAt
+                    CreatedAt = user.CreatedAt,
+                    Roles = userRoles
                 }
             };
         }
@@ -98,6 +105,15 @@ public class AuthService : IAuthService
 
             if (result.Succeeded)
             {
+                // Assign Player role to new user
+                var roleAssigned = await _roleService.AssignRoleToUserAsync(user, UserRoles.Player);
+                if (!roleAssigned)
+                {
+                    _logger.LogWarning("User {UserId} created successfully but failed to assign Player role", user.Id);
+                }
+
+                var userRoles = await _roleService.GetUserRolesAsync(user);
+
                 return new AuthResponse
                 {
                     Success = true,
@@ -108,7 +124,8 @@ public class AuthService : IAuthService
                         Email = user.Email,
                         FirstName = user.FirstName,
                         LastName = user.LastName,
-                        CreatedAt = user.CreatedAt
+                        CreatedAt = user.CreatedAt,
+                        Roles = userRoles
                     }
                 };
             }
@@ -223,13 +240,16 @@ public class AuthService : IAuthService
                 return null;
             }
 
+            var userRoles = await _roleService.GetUserRolesAsync(user);
+
             return new UserInfo
             {
                 Id = user.Id,
                 Email = user.Email!,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                Roles = userRoles
             };
         }
         catch (Exception ex)

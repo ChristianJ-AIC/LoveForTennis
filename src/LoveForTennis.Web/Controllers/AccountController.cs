@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Identity;
 using LoveForTennis.Core.Entities;
 using LoveForTennis.Application.Interfaces;
 using LoveForTennis.Core.Models;
+using LoveForTennis.Core.Constants;
 
 namespace LoveForTennis.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = "RequirePlayerRole")]
 public class AccountController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;

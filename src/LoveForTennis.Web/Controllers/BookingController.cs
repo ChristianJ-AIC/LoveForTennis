@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using LoveForTennis.Core.Entities;
 using LoveForTennis.Application.Interfaces;
+using LoveForTennis.Core.Constants;
 
 namespace LoveForTennis.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = "RequirePlayerRole")]
 public class BookingController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;

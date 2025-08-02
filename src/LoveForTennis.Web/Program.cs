@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using LoveForTennis.Core.Entities;
+using LoveForTennis.Core.Constants;
 using LoveForTennis.Infrastructure.Data;
 using LoveForTennis.Application.Interfaces;
 using LoveForTennis.Application.Services;
@@ -61,6 +62,14 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Add Auth service
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+
+// Add authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequirePlayerRole", policy =>
+        policy.RequireClaim("role", UserRoles.Player));
+});
 
 // Add Booking services
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
