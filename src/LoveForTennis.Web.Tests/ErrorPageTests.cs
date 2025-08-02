@@ -108,4 +108,68 @@ public class ErrorPageTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("Error.", prodContent);
         Assert.Contains("An error occurred while processing your request.", prodContent);
     }
+
+    [Fact]
+    public async Task NotFoundPage_ReturnsCorrectStatusCode()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/Home/PageNotFound");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task NotFoundPage_ShowsCustom404Content()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/Home/PageNotFound");
+
+        // Assert
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("404", content);
+        Assert.Contains("This shot went out of bounds!", content);
+        Assert.Contains("Return to Home Court", content);
+        Assert.Contains("tennis-ball.svg", content);
+    }
+
+    [Fact]
+    public async Task NonExistentRoute_RedirectsToNotFoundPage()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/NonExistent/Route");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("404", content);
+        Assert.Contains("This shot went out of bounds!", content);
+    }
+
+    [Fact]
+    public async Task NonExistentAction_RedirectsToNotFoundPage()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/Home/NonExistentAction");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("404", content);
+        Assert.Contains("This shot went out of bounds!", content);
+    }
 }
