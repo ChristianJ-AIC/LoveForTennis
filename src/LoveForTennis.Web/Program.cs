@@ -18,7 +18,7 @@ builder.Services.AddHttpClient();
 
 // Add Entity Framework (shared with API)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase("LoveForTennisDb"));
+    options.UseInMemoryDatabase($"LoveForTennisDb-Web-{Guid.NewGuid()}"));
 
 // Add Identity services (shared with API)
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -63,6 +63,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Add Auth service
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IDataSeeder, DataSeeder>();
 
 // Add authorization policies
 builder.Services.AddAuthorization(options =>
@@ -84,6 +85,9 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
+    
+    var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+    await dataSeeder.SeedPrincipalUsersAsync();
 }
 
 // Configure the HTTP request pipeline.
