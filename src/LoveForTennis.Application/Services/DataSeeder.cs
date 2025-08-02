@@ -63,10 +63,25 @@ public class DataSeeder : IDataSeeder
         
         if (result.Succeeded)
         {
+            // Assign the primary role
             var roleAssigned = await _roleService.AssignRoleToUserAsync(user, role);
             if (roleAssigned)
             {
                 _logger.LogInformation("Successfully created and assigned role {Role} to user {Email}", role, email);
+                
+                // For Admin, Coach, and BoardMember users, also assign the Player role
+                if (role == UserRoles.Admin || role == UserRoles.Coach || role == UserRoles.BoardMember)
+                {
+                    var playerRoleAssigned = await _roleService.AssignRoleToUserAsync(user, UserRoles.Player);
+                    if (playerRoleAssigned)
+                    {
+                        _logger.LogInformation("Successfully assigned additional Player role to user {Email}", email);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Created user {Email} with role {Role} but failed to assign additional Player role", email, role);
+                    }
+                }
             }
             else
             {
