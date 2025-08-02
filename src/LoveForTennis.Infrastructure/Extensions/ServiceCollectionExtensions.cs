@@ -20,8 +20,10 @@ public static class ServiceCollectionExtensions
         else
         {
             // Fallback to InMemory database if no connection string
+            // Use consistent database name for each application type, but include process ID for isolation during tests
+            var processId = Environment.ProcessId;
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseInMemoryDatabase($"LoveForTennisDb-{applicationName}-{Guid.NewGuid()}"));
+                options.UseInMemoryDatabase($"LoveForTennisDb-{applicationName}-{processId}"));
         }
         
         return services;
