@@ -6,6 +6,7 @@ using LoveForTennis.Core.Interfaces;
 using LoveForTennis.Core.Entities;
 using LoveForTennis.Core.Constants;
 using LoveForTennis.Infrastructure.Data;
+using LoveForTennis.Infrastructure.Extensions;
 using LoveForTennis.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,9 +18,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add Entity Framework
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase($"LoveForTennisDb-API-{Guid.NewGuid()}"));
+// Add Entity Framework with connection string fallback logic
+builder.Services.AddDatabase(builder.Configuration, "API");
 
 // Add Identity services
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

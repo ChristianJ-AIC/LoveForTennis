@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using LoveForTennis.Core.Entities;
 using LoveForTennis.Core.Constants;
 using LoveForTennis.Infrastructure.Data;
+using LoveForTennis.Infrastructure.Extensions;
 using LoveForTennis.Application.Interfaces;
 using LoveForTennis.Application.Services;
 using LoveForTennis.Core.Interfaces;
@@ -16,9 +17,8 @@ builder.Services.AddControllersWithViews();
 // Add HttpClient
 builder.Services.AddHttpClient();
 
-// Add Entity Framework (shared with API)
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase($"LoveForTennisDb-Web-{Guid.NewGuid()}"));
+// Add Entity Framework with connection string fallback logic
+builder.Services.AddDatabase(builder.Configuration, "Web");
 
 // Add Identity services (shared with API)
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
