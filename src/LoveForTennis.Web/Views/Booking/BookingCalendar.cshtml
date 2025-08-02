@@ -1,0 +1,35 @@
+@{
+    ViewData["Title"] = "Book New Session";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-plus me-2"></i>Book New Session
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- BookingCalendar content will be implemented here -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-plus fa-4x text-muted mb-3"></i>
+                        <h5>Tennis Court Booking</h5>
+                        <p class="text-muted">Calendar functionality coming soon!</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="@Url.Action("Bookings", "Booking")" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Bookings
+                        </a>
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-primary">
+                            <i class="fas fa-home me-2"></i>Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
