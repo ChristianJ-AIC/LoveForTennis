@@ -65,4 +65,11 @@ public class HomeController : Controller
             IsDevelopment = _environment.IsDevelopment()
         });
     }
+
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult PageNotFound()
+    {
+        Response.StatusCode = 404;
+        return View("NotFound");
+    }
 }

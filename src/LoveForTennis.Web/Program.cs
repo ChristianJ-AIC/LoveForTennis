@@ -77,6 +77,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Add status code pages for 404 and other HTTP status codes
+app.UseStatusCodePagesWithReExecute("/Home/PageNotFound");
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
