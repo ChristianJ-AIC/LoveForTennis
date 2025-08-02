@@ -19,7 +19,7 @@ builder.Services.AddSwaggerGen();
 
 // Add Entity Framework
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase("LoveForTennisDb"));
+    options.UseInMemoryDatabase($"LoveForTennisDb-API-{Guid.NewGuid()}"));
 
 // Add Identity services
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -66,6 +66,7 @@ builder.Services.AddScoped<IDummyRepository, DummyRepository>();
 builder.Services.AddScoped<IDummyService, DummyService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IDataSeeder, DataSeeder>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IBookingPlayerRepository, BookingPlayerRepository>();
@@ -98,6 +99,9 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
+    
+    var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+    await dataSeeder.SeedPrincipalUsersAsync();
 }
 
 // Configure the HTTP request pipeline.
