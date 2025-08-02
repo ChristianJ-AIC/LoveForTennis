@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "My Sign Ups";
+    ViewData["Title"] = "My Bookings";
 }
 
 <div class="container mt-4">
@@ -8,7 +8,7 @@
             <div class="card">
                 <div class="card-header bg-info text-white">
                     <h4 class="mb-0">
-                        <i class="fas fa-calendar-check me-2"></i>My Sign Ups
+                        <i class="fas fa-calendar-check me-2"></i>My Bookings
                     </h4>
                 </div>
                 <div class="card-body">
@@ -23,19 +23,19 @@
                         </div>
                     </div>
 
-                    <!-- Upcoming Sign Ups Section -->
+                    <!-- Upcoming Bookings Section -->
                     <div class="row">
                         <div class="col-12">
                             <h5 class="mb-3">
-                                <i class="fas fa-calendar me-2"></i>Upcoming Sign Ups
+                                <i class="fas fa-calendar me-2"></i>Upcoming Bookings
                             </h5>
                             <div class="alert alert-info" role="alert">
                                 <i class="fas fa-info-circle me-2"></i>
-                                No upcoming sign ups found. Book your tennis sessions to see them here.
+                                No upcoming bookings found. Book your tennis sessions to see them here.
                             </div>
                             
-                            <!-- Placeholder for upcoming sign ups -->
-                            <div class="card mb-3 d-none" id="upcomingSignUpTemplate">
+                            <!-- Placeholder for upcoming bookings -->
+                            <div class="card mb-3 d-none" id="upcomingBookingTemplate">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -68,19 +68,19 @@
 
                     <hr>
 
-                    <!-- Past Sign Ups Section -->
+                    <!-- Past Bookings Section -->
                     <div class="row">
                         <div class="col-12">
                             <h5 class="mb-3">
-                                <i class="fas fa-history me-2"></i>Past Sign Ups
+                                <i class="fas fa-history me-2"></i>Past Bookings
                             </h5>
                             <div class="alert alert-secondary" role="alert">
                                 <i class="fas fa-history me-2"></i>
-                                No past sign ups available. Your booking history will appear here.
+                                No past bookings available. Your booking history will appear here.
                             </div>
                             
-                            <!-- Placeholder for past sign ups table -->
-                            <div class="table-responsive d-none" id="pastSignUpsTable">
+                            <!-- Placeholder for past bookings table -->
+                            <div class="table-responsive d-none" id="pastBookingsTable">
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>

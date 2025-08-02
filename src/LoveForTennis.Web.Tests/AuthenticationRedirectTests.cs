@@ -21,7 +21,7 @@ public class AuthenticationRedirectTests : IClassFixture<WebApplicationFactory<P
     [Theory]
     [InlineData("/Account/Profile")]
     [InlineData("/Account/Details")]
-    [InlineData("/Account/SignUps")]
+    [InlineData("/Booking/Bookings")]
     [InlineData("/Account/Payment")]
     public async Task UnauthenticatedUser_AccessingProtectedRoute_RedirectsToHomePage(string protectedRoute)
     {
