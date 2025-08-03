@@ -79,15 +79,22 @@ public class DataSeederTests
         var coachRoles = await roleService.GetUserRolesAsync(coachUser);
         var playerRoles = await roleService.GetUserRolesAsync(playerUser);
 
-        Assert.Single(adminRoles);
+        // Admin users should have both Admin and Player roles
+        Assert.Equal(2, adminRoles.Count);
         Assert.Contains(UserRoles.Admin, adminRoles);
+        Assert.Contains(UserRoles.Player, adminRoles);
 
-        Assert.Single(boardMemberRoles);
+        // BoardMember users should have both BoardMember and Player roles
+        Assert.Equal(2, boardMemberRoles.Count);
         Assert.Contains(UserRoles.BoardMember, boardMemberRoles);
+        Assert.Contains(UserRoles.Player, boardMemberRoles);
 
-        Assert.Single(coachRoles);
+        // Coach users should have both Coach and Player roles
+        Assert.Equal(2, coachRoles.Count);
         Assert.Contains(UserRoles.Coach, coachRoles);
+        Assert.Contains(UserRoles.Player, coachRoles);
 
+        // Player users should only have the Player role
         Assert.Single(playerRoles);
         Assert.Contains(UserRoles.Player, playerRoles);
     }
