@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using LoveForTennis.Core.Entities;
+using LoveForTennis.Core.Enums;
 
 namespace LoveForTennis.Infrastructure.Data;
 
@@ -14,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<DummyEntity> DummyEntities { get; set; }
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<BookingPlayer> BookingPlayers { get; set; }
+    public DbSet<Court> Courts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +80,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                   .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<Court>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.SurfaceType).IsRequired();
+            entity.Property(e => e.AllowedBookingTimeType).IsRequired();
+            entity.Property(e => e.InOrOutdoorType).IsRequired();
+            entity.Property(e => e.BookingAllowedFrom).IsRequired();
+            entity.Property(e => e.BookingAllowedTill).IsRequired();
+            entity.Property(e => e.BookingsOpenForNumberOfDaysIntoTheFuture);
+        });
+
         // Seed data
         modelBuilder.Entity<DummyEntity>().HasData(
             new DummyEntity
@@ -100,6 +115,45 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 Name = "Tennis Court",
                 Description = "Standard size tennis court with clay surface",
                 CreatedAt = DateTime.UtcNow
+            }
+        );
+
+        modelBuilder.Entity<Court>().HasData(
+            new Court
+            {
+                Id = 1,
+                Name = "Court 1",
+                Description = "Clay outdoor court with hourly booking",
+                SurfaceType = CourtSurfaceType.Clay,
+                AllowedBookingTimeType = BookingTimeType.Hour,
+                InOrOutdoorType = InOrOutdoorType.Outdoor,
+                BookingAllowedFrom = new TimeOnly(7, 0),
+                BookingAllowedTill = new TimeOnly(22, 0),
+                BookingsOpenForNumberOfDaysIntoTheFuture = 14
+            },
+            new Court
+            {
+                Id = 2,
+                Name = "Court 2",
+                Description = "RedPlus outdoor court with hourly booking",
+                SurfaceType = CourtSurfaceType.RedPlus,
+                AllowedBookingTimeType = BookingTimeType.Hour,
+                InOrOutdoorType = InOrOutdoorType.Outdoor,
+                BookingAllowedFrom = new TimeOnly(7, 0),
+                BookingAllowedTill = new TimeOnly(22, 0),
+                BookingsOpenForNumberOfDaysIntoTheFuture = 14
+            },
+            new Court
+            {
+                Id = 3,
+                Name = "Court 3",
+                Description = "Hard indoor court with hourly booking",
+                SurfaceType = CourtSurfaceType.Hard,
+                AllowedBookingTimeType = BookingTimeType.Hour,
+                InOrOutdoorType = InOrOutdoorType.Indoor,
+                BookingAllowedFrom = new TimeOnly(7, 0),
+                BookingAllowedTill = new TimeOnly(22, 0),
+                BookingsOpenForNumberOfDaysIntoTheFuture = 14
             }
         );
     }
