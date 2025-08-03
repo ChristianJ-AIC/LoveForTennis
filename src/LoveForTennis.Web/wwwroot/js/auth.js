@@ -383,6 +383,7 @@ async function handleLogout() {
         if (!csrfToken) {
             console.warn('CSRF token not found, redirecting to front page');
             currentUser = null;
+            updateUIForUnauthenticatedUser();
             window.location.href = '/';
             return;
         }
@@ -406,18 +407,23 @@ async function handleLogout() {
             // Hide any open modals
             hideAllModals();
             
+            // Update UI to reflect unauthenticated state before redirect
+            updateUIForUnauthenticatedUser();
+            
             // Redirect to front page
             window.location.href = '/';
         } else {
             // Logout failed on server - fallback to redirect to front page
             console.warn('Logout response not OK, falling back to redirect');
             currentUser = null;
+            updateUIForUnauthenticatedUser();
             window.location.href = '/';
         }
     } catch (error) {
         console.error('Logout error:', error);
         // Network error - fallback to redirect to front page for safety
         currentUser = null;
+        updateUIForUnauthenticatedUser();
         window.location.href = '/';
     }
 }
