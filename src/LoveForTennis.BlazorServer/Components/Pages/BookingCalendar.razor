@@ -39,58 +39,117 @@
                     <h5>Select Date and Time</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Calendar Navigation -->
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <button class="btn btn-outline-secondary" @onclick="PreviousMonth">&lt;</button>
-                        <h5>@CurrentMonth.ToString("MMMM yyyy")</h5>
-                        <button class="btn btn-outline-secondary" @onclick="NextMonth">&gt;</button>
-                    </div>
-
-                    <!-- Calendar Grid -->
-                    <div class="calendar-grid">
-                        <div class="calendar-header">
-                            <div class="calendar-day-header">Sun</div>
-                            <div class="calendar-day-header">Mon</div>
-                            <div class="calendar-day-header">Tue</div>
-                            <div class="calendar-day-header">Wed</div>
-                            <div class="calendar-day-header">Thu</div>
-                            <div class="calendar-day-header">Fri</div>
-                            <div class="calendar-day-header">Sat</div>
+                    @if (CalendarType == "full")
+                    {
+                        <!-- Full Calendar View -->
+                        <!-- Calendar Navigation -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button class="btn btn-outline-secondary" @onclick="PreviousMonth">&lt;</button>
+                            <h5>@CurrentMonth.ToString("MMMM yyyy")</h5>
+                            <button class="btn btn-outline-secondary" @onclick="NextMonth">&gt;</button>
                         </div>
-                        
-                        @foreach (var week in GetCalendarWeeks())
+
+                        <!-- Calendar Grid -->
+                        <div class="calendar-grid">
+                            <div class="calendar-header">
+                                <div class="calendar-day-header">Sun</div>
+                                <div class="calendar-day-header">Mon</div>
+                                <div class="calendar-day-header">Tue</div>
+                                <div class="calendar-day-header">Wed</div>
+                                <div class="calendar-day-header">Thu</div>
+                                <div class="calendar-day-header">Fri</div>
+                                <div class="calendar-day-header">Sat</div>
+                            </div>
+                            
+                            @foreach (var week in GetCalendarWeeks())
+                            {
+                                <div class="calendar-week">
+                                    @foreach (var day in week)
+                                    {
+                                        <div class="calendar-day @GetDayClass(day)" @onclick="@(() => SelectDate(day))">
+                                            <span class="day-number">@day.Day</span>
+                                            @if (HasBookings(day))
+                                            {
+                                                <div class="booking-indicator"></div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Time Slots for Full Calendar -->
+                        @if (SelectedDate.HasValue)
                         {
-                            <div class="calendar-week">
-                                @foreach (var day in week)
+                            <div class="mt-4">
+                                <h6>Available Time Slots for @SelectedDate.Value.ToString("dddd, MMMM dd, yyyy")</h6>
+                                <div class="time-slots">
+                                    @foreach (var slot in GetTimeSlots())
+                                    {
+                                        <button class="btn time-slot @GetTimeSlotClass(slot)" 
+                                                @onclick="@(() => SelectTimeSlot(slot))"
+                                                disabled="@IsTimeSlotDisabled(slot)">
+                                            @slot.ToString("HH:mm")
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Simple Calendar View -->
+                        <!-- Day Selection -->
+                        <div class="mb-4">
+                            <h6>Select Day</h6>
+                            <div class="simple-days-container">
+                                @foreach (var day in GetSimpleDays())
                                 {
-                                    <div class="calendar-day @GetDayClass(day)" @onclick="@(() => SelectDate(day))">
-                                        <span class="day-number">@day.Day</span>
-                                        @if (HasBookings(day))
-                                        {
-                                            <div class="booking-indicator"></div>
-                                        }
+                                    <div class="simple-day-box @GetSimpleDayClass(day)" @onclick="@(() => SelectSimpleDate(day))">
+                                        <div class="day-name">@day.ToString("ddd").ToUpper()</div>
+                                        <div class="day-number">@day.Day</div>
+                                        <div class="month-name">@day.ToString("MMM").ToUpper()</div>
                                     </div>
                                 }
                             </div>
-                        }
-                    </div>
+                        </div>
 
-                    <!-- Time Slots -->
-                    @if (SelectedDate.HasValue)
-                    {
-                        <div class="mt-4">
-                            <h6>Available Time Slots for @SelectedDate.Value.ToString("dddd, MMMM dd, yyyy")</h6>
-                            <div class="time-slots">
-                                @foreach (var slot in GetTimeSlots())
+                        <!-- Time Slot Selection -->
+                        @if (SelectedDate.HasValue)
+                        {
+                            <div class="mb-4">
+                                <h6>Select Time Slots (Max 2 hours)</h6>
+                                <div class="simple-timeslots-container">
+                                    @foreach (var slot in GetSimpleTimeSlots())
+                                    {
+                                        <div class="simple-timeslot-box @GetSimpleTimeSlotClass(slot)" @onclick="@(() => ToggleSimpleTimeSlot(slot))">
+                                            @slot.ToString("HH:mm")
+                                        </div>
+                                    }
+                                </div>
+                                @if (SelectedTimeSlots.Any())
                                 {
-                                    <button class="btn time-slot @GetTimeSlotClass(slot)" 
-                                            @onclick="@(() => SelectTimeSlot(slot))"
-                                            disabled="@IsTimeSlotDisabled(slot)">
-                                        @slot.ToString("HH:mm")
-                                    </button>
+                                    <small class="text-muted">Selected: @GetSelectedTimeSlotsDisplay() (@GetTotalSelectedHours() hours)</small>
                                 }
                             </div>
-                        </div>
+                        }
+
+                        <!-- Court Selection -->
+                        @if (SelectedDate.HasValue && SelectedTimeSlots.Any())
+                        {
+                            <div class="mb-4">
+                                <h6>Select Court</h6>
+                                <div class="simple-courts-container">
+                                    @foreach (var court in Courts)
+                                    {
+                                        <div class="simple-court-box @GetSimpleCourtClass(court)" @onclick="@(() => SelectSimpleCourt(court))">
+                                            <div class="court-name">@court.Name</div>
+                                            <div class="court-details">@court.SurfaceType - @court.InOrOutdoorType</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -98,34 +157,37 @@
 
         <!-- Right Panel - Court Selection and Booking Form -->
         <div class="col-lg-4">
-            <!-- Court Selection -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5>Select Court</h5>
-                </div>
-                <div class="card-body">
-                    @if (Courts != null && Courts.Any())
-                    {
-                        @foreach (var court in Courts)
+            <!-- Court Selection (Only for Full Calendar) -->
+            @if (CalendarType == "full")
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5>Select Court</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Courts != null && Courts.Any())
                         {
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="court" id="court-@court.Id" 
-                                       value="@court.Id" @onchange="@(() => SelectCourt(court))" 
-                                       checked="@(SelectedCourt?.Id == court.Id)">
-                                <label class="form-check-label" for="court-@court.Id">
-                                    <strong>@court.Name</strong><br>
-                                    <small class="text-muted">@court.Description</small><br>
-                                    <small>@court.SurfaceType - @court.InOrOutdoorType</small>
-                                </label>
-                            </div>
+                            @foreach (var court in Courts)
+                            {
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="court" id="court-@court.Id" 
+                                           value="@court.Id" @onchange="@(() => SelectCourt(court))" 
+                                           checked="@(SelectedCourt?.Id == court.Id)">
+                                    <label class="form-check-label" for="court-@court.Id">
+                                        <strong>@court.Name</strong><br>
+                                        <small class="text-muted">@court.Description</small><br>
+                                        <small>@court.SurfaceType - @court.InOrOutdoorType</small>
+                                    </label>
+                                </div>
+                            }
                         }
-                    }
-                    else
-                    {
-                        <p class="text-muted">Loading courts...</p>
-                    }
+                        else
+                        {
+                            <p class="text-muted">Loading courts...</p>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
             <!-- Player Search and Selection -->
             <div class="card mb-3">
@@ -338,6 +400,171 @@
         border-radius: 0.25rem;
         margin-bottom: 4px;
     }
+
+    /* Simple Calendar Styles */
+    .simple-days-container {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .simple-day-box {
+        min-width: 60px;
+        padding: 8px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        background-color: white;
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .simple-day-box:hover:not(.disabled) {
+        border-color: #0d6efd;
+        background-color: #f8f9ff;
+    }
+
+    .simple-day-box.selected {
+        border-color: #0d6efd;
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .simple-day-box.disabled {
+        border-color: #dee2e6;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .simple-day-box .day-name {
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .simple-day-box .day-number {
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 1;
+        margin: 2px 0;
+    }
+
+    .simple-day-box .month-name {
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1;
+    }
+
+    .simple-timeslots-container {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .simple-timeslot-box {
+        min-width: 60px;
+        padding: 8px 12px;
+        border: 2px solid #dee2e6;
+        border-radius: 6px;
+        text-align: center;
+        cursor: pointer;
+        background-color: white;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        font-weight: 500;
+        user-select: none;
+    }
+
+    .simple-timeslot-box:hover:not(.disabled) {
+        border-color: #0d6efd;
+        background-color: #f8f9ff;
+    }
+
+    .simple-timeslot-box.selected {
+        border-color: #0d6efd;
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .simple-timeslot-box.disabled {
+        border-color: #dee2e6;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .simple-courts-container {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .simple-court-box {
+        min-width: 120px;
+        padding: 12px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        background-color: white;
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .simple-court-box:hover:not(.disabled) {
+        border-color: #0d6efd;
+        background-color: #f8f9ff;
+    }
+
+    .simple-court-box.selected {
+        border-color: #0d6efd;
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .simple-court-box.disabled {
+        border-color: #dee2e6;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .simple-court-box .court-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+
+    .simple-court-box .court-details {
+        font-size: 0.75rem;
+        line-height: 1.2;
+        margin-top: 4px;
+        opacity: 0.8;
+    }
+
+    /* Responsive design for mobile */
+    @@media (max-width: 768px) {
+        .simple-days-container,
+        .simple-timeslots-container,
+        .simple-courts-container {
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .simple-day-box,
+        .simple-timeslot-box,
+        .simple-court-box {
+            min-width: unset;
+            width: 100%;
+        }
+    }
 </style>
 
 @code {
@@ -345,6 +572,7 @@
     private DateTime CurrentMonth = DateTime.Today;
     private DateTime? SelectedDate;
     private TimeOnly? SelectedTimeSlot;
+    private List<TimeOnly> SelectedTimeSlots = new(); // For simple view multiple selection
     private Court? SelectedCourt;
     private List<Court> Courts = new();
     private List<Booking> Bookings = new();
@@ -389,6 +617,227 @@
     private void SetCalendarType(string type)
     {
         CalendarType = type;
+        // Reset selections when switching views
+        SelectedDate = null;
+        SelectedTimeSlot = null;
+        SelectedTimeSlots.Clear();
+        SelectedCourt = null;
+    }
+
+    // Simple Calendar Methods
+    private List<DateTime> GetSimpleDays()
+    {
+        var days = new List<DateTime>();
+        if (!Courts.Any()) return days;
+
+        // Find the highest BookingsOpenForNumberOfDaysIntoTheFuture from all courts
+        var maxDaysIntoFuture = Courts
+            .Where(c => c.BookingsOpenForNumberOfDaysIntoTheFuture.HasValue)
+            .Max(c => c.BookingsOpenForNumberOfDaysIntoTheFuture) ?? 30; // Default to 30 if none set
+
+        for (int i = 0; i <= maxDaysIntoFuture; i++)
+        {
+            var day = DateTime.Today.AddDays(i);
+            days.Add(day);
+        }
+
+        return days;
+    }
+
+    private string GetSimpleDayClass(DateTime day)
+    {
+        var classes = new List<string>();
+        
+        // Check if day is disabled based on BookingAllowedTill
+        if (IsDayDisabled(day))
+            classes.Add("disabled");
+            
+        if (SelectedDate?.Date == day.Date)
+            classes.Add("selected");
+            
+        return string.Join(" ", classes);
+    }
+
+    private bool IsDayDisabled(DateTime day)
+    {
+        // Check if any court allows booking on this day
+        return !Courts.Any(court => 
+        {
+            // Check if the court has BookingAllowedTill constraint
+            if (court.BookingAllowedTill == default) return true; // No constraint
+            
+            // Check if the day's latest possible booking time (23:59) is before the court's BookingAllowedTill
+            var dayEnd = new TimeOnly(23, 59);
+            return dayEnd <= court.BookingAllowedTill || day > DateTime.Today;
+        });
+    }
+
+    private void SelectSimpleDate(DateTime date)
+    {
+        if (IsDayDisabled(date)) return;
+        
+        SelectedDate = date;
+        SelectedTimeSlots.Clear(); // Reset time slot selections
+        SelectedCourt = null; // Reset court selection
+    }
+
+    private List<TimeOnly> GetSimpleTimeSlots()
+    {
+        var slots = new List<TimeOnly>();
+        if (!Courts.Any() || !SelectedDate.HasValue) return slots;
+
+        // Find the lowest integer value of BookingTimeType across all courts
+        var lowestTimeType = Courts.Min(c => (int)c.AllowedBookingTimeType);
+        
+        // Find the earliest BookingAllowedFrom and latest BookingAllowedTill
+        var earliestFrom = Courts.Min(c => c.BookingAllowedFrom);
+        var latestTill = Courts.Max(c => c.BookingAllowedTill);
+
+        // Generate time slots based on the lowest BookingTimeType
+        var currentTime = earliestFrom;
+        var incrementMinutes = GetIncrementMinutes((BookingTimeType)lowestTimeType);
+
+        while (currentTime < latestTill)
+        {
+            slots.Add(currentTime);
+            currentTime = currentTime.AddMinutes(incrementMinutes);
+        }
+
+        return slots;
+    }
+
+    private int GetIncrementMinutes(BookingTimeType timeType)
+    {
+        return timeType switch
+        {
+            BookingTimeType.Minute => 1,
+            BookingTimeType.Quarter => 15,
+            BookingTimeType.HalfHour => 30,
+            BookingTimeType.Hour => 60,
+            _ => 60
+        };
+    }
+
+    private string GetSimpleTimeSlotClass(TimeOnly slot)
+    {
+        var classes = new List<string>();
+        
+        if (IsSimpleTimeSlotDisabled(slot))
+            classes.Add("disabled");
+            
+        if (SelectedTimeSlots.Contains(slot))
+            classes.Add("selected");
+            
+        return string.Join(" ", classes);
+    }
+
+    private bool IsSimpleTimeSlotDisabled(TimeOnly slot)
+    {
+        if (!SelectedDate.HasValue) return false;
+
+        // Check if this timeslot is booked across all available courts
+        var slotDateTime = SelectedDate.Value.Add(slot.ToTimeSpan());
+        var lowestTimeType = Courts.Min(c => (int)c.AllowedBookingTimeType);
+        var incrementMinutes = GetIncrementMinutes((BookingTimeType)lowestTimeType);
+        var endDateTime = slotDateTime.AddMinutes(incrementMinutes);
+
+        // Check if ALL courts have this slot booked
+        var availableCourts = Courts.Where(court => 
+            !Bookings.Any(b => 
+                b.CourtId == court.Id &&
+                b.BookingFrom < endDateTime &&
+                b.BookingTo > slotDateTime)).ToList();
+
+        return !availableCourts.Any();
+    }
+
+    private void ToggleSimpleTimeSlot(TimeOnly slot)
+    {
+        if (IsSimpleTimeSlotDisabled(slot)) return;
+
+        if (SelectedTimeSlots.Contains(slot))
+        {
+            SelectedTimeSlots.Remove(slot);
+        }
+        else
+        {
+            // Check if adding this slot would exceed 2 hours
+            var totalMinutes = GetTotalSelectedMinutes() + GetIncrementMinutes((BookingTimeType)Courts.Min(c => (int)c.AllowedBookingTimeType));
+            if (totalMinutes <= 120) // 2 hours max
+            {
+                SelectedTimeSlots.Add(slot);
+                SelectedTimeSlots.Sort();
+            }
+        }
+        
+        // Reset court selection when timeslots change
+        SelectedCourt = null;
+    }
+
+    private int GetTotalSelectedMinutes()
+    {
+        if (!SelectedTimeSlots.Any()) return 0;
+        var incrementMinutes = GetIncrementMinutes((BookingTimeType)Courts.Min(c => (int)c.AllowedBookingTimeType));
+        return SelectedTimeSlots.Count * incrementMinutes;
+    }
+
+    private double GetTotalSelectedHours()
+    {
+        return GetTotalSelectedMinutes() / 60.0;
+    }
+
+    private string GetSelectedTimeSlotsDisplay()
+    {
+        if (!SelectedTimeSlots.Any()) return "";
+        
+        var sortedSlots = SelectedTimeSlots.OrderBy(s => s).ToList();
+        if (sortedSlots.Count == 1)
+        {
+            return sortedSlots[0].ToString("HH:mm");
+        }
+        
+        return $"{sortedSlots.First():HH:mm} - {sortedSlots.Last():HH:mm}";
+    }
+
+    private string GetSimpleCourtClass(Court court)
+    {
+        var classes = new List<string>();
+        
+        if (IsSimpleCourtDisabled(court))
+            classes.Add("disabled");
+            
+        if (SelectedCourt?.Id == court.Id)
+            classes.Add("selected");
+            
+        return string.Join(" ", classes);
+    }
+
+    private bool IsSimpleCourtDisabled(Court court)
+    {
+        if (!SelectedDate.HasValue || !SelectedTimeSlots.Any()) return false;
+
+        // Check if this court has any of the selected time slots booked
+        foreach (var slot in SelectedTimeSlots)
+        {
+            var slotDateTime = SelectedDate.Value.Add(slot.ToTimeSpan());
+            var incrementMinutes = GetIncrementMinutes((BookingTimeType)Courts.Min(c => (int)c.AllowedBookingTimeType));
+            var endDateTime = slotDateTime.AddMinutes(incrementMinutes);
+
+            var hasConflict = Bookings.Any(b => 
+                b.CourtId == court.Id &&
+                b.BookingFrom < endDateTime &&
+                b.BookingTo > slotDateTime);
+
+            if (hasConflict) return true;
+        }
+
+        return false;
+    }
+
+    private void SelectSimpleCourt(Court court)
+    {
+        if (IsSimpleCourtDisabled(court)) return;
+        SelectedCourt = court;
     }
 
     private void PreviousMonth()
@@ -512,7 +961,7 @@
     {
         PlayerSearchQuery = e.Value?.ToString() ?? "";
         
-        if (string.IsNullOrWhiteSpace(PlayerSearchQuery) || PlayerSearchQuery.Length < 2)
+        if (string.IsNullOrWhiteSpace(PlayerSearchQuery) || PlayerSearchQuery.Length < 2 || CurrentUser == null)
         {
             PlayerSearchResults.Clear();
             return;
@@ -520,7 +969,7 @@
 
         var query = PlayerSearchQuery.ToLower();
         PlayerSearchResults = await DbContext.Users
-            .Where(u => u.Id != CurrentUser!.Id && 
+            .Where(u => u.Id != CurrentUser.Id && 
                        !SelectedPlayers.Select(p => p.Id).Contains(u.Id) &&
                        (u.FirstName.ToLower().Contains(query) || 
                         u.LastName.ToLower().Contains(query) || 
@@ -546,19 +995,46 @@
 
     private bool CanCreateBooking()
     {
-        return SelectedDate.HasValue && 
-               SelectedTimeSlot.HasValue && 
-               SelectedCourt != null && 
-               CurrentUser != null;
+        if (CalendarType == "simple")
+        {
+            return SelectedDate.HasValue && 
+                   SelectedTimeSlots.Any() && 
+                   SelectedCourt != null && 
+                   CurrentUser != null;
+        }
+        else
+        {
+            return SelectedDate.HasValue && 
+                   SelectedTimeSlot.HasValue && 
+                   SelectedCourt != null && 
+                   CurrentUser != null;
+        }
     }
 
     private string GetSelectedTimeRange()
     {
-        if (!SelectedTimeSlot.HasValue) return "";
-        
-        var start = SelectedTimeSlot.Value;
-        var end = start.AddHours(1);
-        return $"{start:HH:mm} - {end:HH:mm}";
+        if (CalendarType == "simple")
+        {
+            if (!SelectedTimeSlots.Any()) return "";
+            
+            var sortedSlots = SelectedTimeSlots.OrderBy(s => s).ToList();
+            if (sortedSlots.Count == 1)
+            {
+                var incrementMinutes = GetIncrementMinutes((BookingTimeType)Courts.Min(c => (int)c.AllowedBookingTimeType));
+                var end = sortedSlots[0].AddMinutes(incrementMinutes);
+                return $"{sortedSlots[0]:HH:mm} - {end:HH:mm}";
+            }
+            
+            return GetSelectedTimeSlotsDisplay();
+        }
+        else
+        {
+            if (!SelectedTimeSlot.HasValue) return "";
+            
+            var start = SelectedTimeSlot.Value;
+            var end = start.AddHours(1);
+            return $"{start:HH:mm} - {end:HH:mm}";
+        }
     }
 
     private async Task CreateBooking()
@@ -570,34 +1046,74 @@
 
         try
         {
-            var startDateTime = SelectedDate!.Value.Add(SelectedTimeSlot!.Value.ToTimeSpan());
-            var endDateTime = startDateTime.AddHours(1);
-
-            // Create the main booking
-            var booking = new Booking
+            if (CalendarType == "simple")
             {
-                BookedByUserId = CurrentUser!.Id,
-                CourtId = SelectedCourt!.Id,
-                BookingFrom = startDateTime,
-                BookingTo = endDateTime,
-                Created = DateTime.UtcNow,
-                BookingType = BookingType.Player,
-                Cancelled = false
-            };
-
-            DbContext.Bookings.Add(booking);
-            await DbContext.SaveChangesAsync();
-
-            // Add booking players
-            foreach (var player in SelectedPlayers)
-            {
-                var bookingPlayer = new BookingPlayer
+                // Create bookings for each selected time slot
+                var incrementMinutes = GetIncrementMinutes((BookingTimeType)Courts.Min(c => (int)c.AllowedBookingTimeType));
+                
+                foreach (var timeSlot in SelectedTimeSlots.OrderBy(s => s))
                 {
-                    BookingId = booking.Id,
-                    PlayerUserId = player.Id,
-                    Created = DateTime.UtcNow
+                    var startDateTime = SelectedDate!.Value.Add(timeSlot.ToTimeSpan());
+                    var endDateTime = startDateTime.AddMinutes(incrementMinutes);
+
+                    var booking = new Booking
+                    {
+                        BookedByUserId = CurrentUser!.Id,
+                        CourtId = SelectedCourt!.Id,
+                        BookingFrom = startDateTime,
+                        BookingTo = endDateTime,
+                        Created = DateTime.UtcNow,
+                        BookingType = BookingType.Player,
+                        Cancelled = false
+                    };
+
+                    DbContext.Bookings.Add(booking);
+                    await DbContext.SaveChangesAsync();
+
+                    // Add booking players for each booking
+                    foreach (var player in SelectedPlayers)
+                    {
+                        var bookingPlayer = new BookingPlayer
+                        {
+                            BookingId = booking.Id,
+                            PlayerUserId = player.Id,
+                            Created = DateTime.UtcNow
+                        };
+                        DbContext.BookingPlayers.Add(bookingPlayer);
+                    }
+                }
+            }
+            else
+            {
+                // Original full calendar booking logic
+                var startDateTime = SelectedDate!.Value.Add(SelectedTimeSlot!.Value.ToTimeSpan());
+                var endDateTime = startDateTime.AddHours(1);
+
+                var booking = new Booking
+                {
+                    BookedByUserId = CurrentUser!.Id,
+                    CourtId = SelectedCourt!.Id,
+                    BookingFrom = startDateTime,
+                    BookingTo = endDateTime,
+                    Created = DateTime.UtcNow,
+                    BookingType = BookingType.Player,
+                    Cancelled = false
                 };
-                DbContext.BookingPlayers.Add(bookingPlayer);
+
+                DbContext.Bookings.Add(booking);
+                await DbContext.SaveChangesAsync();
+
+                // Add booking players
+                foreach (var player in SelectedPlayers)
+                {
+                    var bookingPlayer = new BookingPlayer
+                    {
+                        BookingId = booking.Id,
+                        PlayerUserId = player.Id,
+                        Created = DateTime.UtcNow
+                    };
+                    DbContext.BookingPlayers.Add(bookingPlayer);
+                }
             }
 
             await DbContext.SaveChangesAsync();
@@ -608,6 +1124,7 @@
             // Reset form
             SelectedDate = null;
             SelectedTimeSlot = null;
+            SelectedTimeSlots.Clear();
             SelectedCourt = null;
             SelectedPlayers.Clear();
             
