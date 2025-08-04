@@ -51,8 +51,8 @@ public class BookingRepository : IBookingRepository
         _context.Bookings.Add(entity);
         await _context.SaveChangesAsync();
         
-        // Return entity without trying to load non-existent navigation properties
-        return entity;
+        // Reload the entity with navigation properties
+        return await GetByIdAsync(entity.Id) ?? entity;
     }
 
     public async Task<Booking> UpdateAsync(Booking entity)
@@ -60,7 +60,9 @@ public class BookingRepository : IBookingRepository
         entity.LastUpdated = DateTime.UtcNow;
         _context.Entry(entity).State = EntityState.Modified;
         await _context.SaveChangesAsync();
-        return entity;
+        
+        // Reload the entity with navigation properties
+        return await GetByIdAsync(entity.Id) ?? entity;
     }
 
     public async Task DeleteAsync(int id)
