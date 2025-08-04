@@ -1,3 +1,5 @@
+using LoveForTennis.Core.Enums;
+
 namespace LoveForTennis.Core.Entities;
 
 public class Booking
@@ -9,6 +11,7 @@ public class Booking
     public bool Cancelled { get; set; }
     public DateTime Created { get; set; }
     public DateTime? LastUpdated { get; set; }
+    public BookingType BookingType { get; set; } = BookingType.NotSet;
 
     // Navigation properties
     public ApplicationUser BookedByUser { get; set; } = null!;

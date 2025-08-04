@@ -41,7 +41,8 @@ public class BookingService : IBookingService
             BookedByUserId = bookingDto.BookedByUserId,
             BookingFrom = bookingDto.BookingFrom,
             BookingTo = bookingDto.BookingTo,
-            Cancelled = bookingDto.Cancelled
+            Cancelled = bookingDto.Cancelled,
+            BookingType = bookingDto.BookingType
         };
 
         var createdEntity = await _bookingRepository.CreateAsync(entity);
@@ -57,7 +58,8 @@ public class BookingService : IBookingService
             BookingFrom = bookingDto.BookingFrom,
             BookingTo = bookingDto.BookingTo,
             Cancelled = bookingDto.Cancelled,
-            Created = bookingDto.Created
+            Created = bookingDto.Created,
+            BookingType = bookingDto.BookingType
         };
 
         var updatedEntity = await _bookingRepository.UpdateAsync(entity);
@@ -80,6 +82,7 @@ public class BookingService : IBookingService
             Cancelled = entity.Cancelled,
             Created = entity.Created,
             LastUpdated = entity.LastUpdated,
+            BookingType = entity.BookingType,
             BookedByUserName = entity.BookedByUser?.UserName ?? string.Empty,
             Players = entity.Players?.Select(bp => new BookingPlayerDto
             {
