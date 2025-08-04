@@ -121,8 +121,14 @@ namespace LoveForTennis.Infrastructure.Migrations
                     b.Property<DateTime>("BookingTo")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("BookingType")
+                        .HasColumnType("int");
+
                     b.Property<bool>("Cancelled")
                         .HasColumnType("bit");
+
+                    b.Property<int>("CourtId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
@@ -133,6 +139,8 @@ namespace LoveForTennis.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BookedByUserId");
+
+                    b.HasIndex("CourtId");
 
                     b.ToTable("Bookings");
                 });
@@ -446,7 +454,15 @@ namespace LoveForTennis.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("LoveForTennis.Core.Entities.Court", "Court")
+                        .WithMany()
+                        .HasForeignKey("CourtId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("BookedByUser");
+
+                    b.Navigation("Court");
                 });
 
             modelBuilder.Entity("LoveForTennis.Core.Entities.BookingPlayer", b =>

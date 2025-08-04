@@ -39,6 +39,7 @@ public class BookingService : IBookingService
         var entity = new Booking
         {
             BookedByUserId = bookingDto.BookedByUserId,
+            CourtId = bookingDto.CourtId,
             BookingFrom = bookingDto.BookingFrom,
             BookingTo = bookingDto.BookingTo,
             Cancelled = bookingDto.Cancelled,
@@ -55,6 +56,7 @@ public class BookingService : IBookingService
         {
             Id = bookingDto.Id,
             BookedByUserId = bookingDto.BookedByUserId,
+            CourtId = bookingDto.CourtId,
             BookingFrom = bookingDto.BookingFrom,
             BookingTo = bookingDto.BookingTo,
             Cancelled = bookingDto.Cancelled,
@@ -77,6 +79,7 @@ public class BookingService : IBookingService
         {
             Id = entity.Id,
             BookedByUserId = entity.BookedByUserId,
+            CourtId = entity.CourtId,
             BookingFrom = entity.BookingFrom,
             BookingTo = entity.BookingTo,
             Cancelled = entity.Cancelled,
@@ -84,6 +87,7 @@ public class BookingService : IBookingService
             LastUpdated = entity.LastUpdated,
             BookingType = entity.BookingType,
             BookedByUserName = entity.BookedByUser?.UserName ?? string.Empty,
+            CourtName = entity.Court?.Name ?? string.Empty,
             Players = entity.Players?.Select(bp => new BookingPlayerDto
             {
                 Id = bp.Id,

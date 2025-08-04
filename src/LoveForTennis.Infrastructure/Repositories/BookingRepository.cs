@@ -18,6 +18,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _context.Bookings
             .Include(b => b.BookedByUser)
+            .Include(b => b.Court)
             .Include(b => b.Players)
                 .ThenInclude(bp => bp.PlayerUser)
             .ToListAsync();
@@ -27,6 +28,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _context.Bookings
             .Include(b => b.BookedByUser)
+            .Include(b => b.Court)
             .Include(b => b.Players)
                 .ThenInclude(bp => bp.PlayerUser)
             .FirstOrDefaultAsync(b => b.Id == id);
@@ -36,6 +38,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _context.Bookings
             .Include(b => b.BookedByUser)
+            .Include(b => b.Court)
             .Include(b => b.Players)
                 .ThenInclude(bp => bp.PlayerUser)
             .Where(b => b.BookedByUserId == userId)
@@ -48,8 +51,8 @@ public class BookingRepository : IBookingRepository
         _context.Bookings.Add(entity);
         await _context.SaveChangesAsync();
         
-        // Return entity without trying to load non-existent navigation properties
-        return entity;
+        // Reload the entity with navigation properties
+        return await GetByIdAsync(entity.Id) ?? entity;
     }
 
     public async Task<Booking> UpdateAsync(Booking entity)
@@ -57,7 +60,9 @@ public class BookingRepository : IBookingRepository
         entity.LastUpdated = DateTime.UtcNow;
         _context.Entry(entity).State = EntityState.Modified;
         await _context.SaveChangesAsync();
-        return entity;
+        
+        // Reload the entity with navigation properties
+        return await GetByIdAsync(entity.Id) ?? entity;
     }
 
     public async Task DeleteAsync(int id)

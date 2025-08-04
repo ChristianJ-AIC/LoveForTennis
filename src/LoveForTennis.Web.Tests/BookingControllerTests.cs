@@ -83,6 +83,7 @@ public class BookingControllerTests : IClassFixture<WebApplicationFactory<Progra
         var bookingDto = new BookingDto
         {
             BookedByUserId = testUser.Id,
+            CourtId = 1, // Use the first court from seed data
             BookingFrom = DateTime.Now.AddDays(1),
             BookingTo = DateTime.Now.AddDays(1).AddHours(1),
             Cancelled = false
@@ -95,7 +96,45 @@ public class BookingControllerTests : IClassFixture<WebApplicationFactory<Progra
         // Assert
         Assert.NotNull(createdBooking);
         Assert.True(createdBooking.Id > 0);
+        Assert.Equal(1, createdBooking.CourtId);
         Assert.Single(userBookings);
         Assert.Equal(testUser.Id, createdBooking.BookedByUserId);
+    }
+
+    [Fact]
+    public async Task BookingService_BookingIncludesCourtInformation()
+    {
+        // Arrange
+        using var scope = _factory.Services.CreateScope();
+        var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        
+        // Create a test user first
+        var testUser = new ApplicationUser
+        {
+            UserName = "testuser2@test.com",
+            Email = "testuser2@test.com",
+            FirstName = "Test",
+            LastName = "User2"
+        };
+        await userManager.CreateAsync(testUser, "TestPassword123!");
+
+        var bookingDto = new BookingDto
+        {
+            BookedByUserId = testUser.Id,
+            CourtId = 1, // Use Court 1 from seed data which should have name "Court 1"
+            BookingFrom = DateTime.Now.AddDays(2),
+            BookingTo = DateTime.Now.AddDays(2).AddHours(1),
+            Cancelled = false
+        };
+
+        // Act
+        var createdBooking = await bookingService.CreateBookingAsync(bookingDto);
+        var retrievedBooking = await bookingService.GetBookingByIdAsync(createdBooking.Id);
+
+        // Assert
+        Assert.NotNull(retrievedBooking);
+        Assert.Equal(1, retrievedBooking.CourtId);
+        Assert.Equal("Court 1", retrievedBooking.CourtName);
     }
 }
