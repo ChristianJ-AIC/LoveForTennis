@@ -18,6 +18,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _context.Bookings
             .Include(b => b.BookedByUser)
+            .Include(b => b.Court)
             .Include(b => b.Players)
                 .ThenInclude(bp => bp.PlayerUser)
             .ToListAsync();
@@ -27,6 +28,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _context.Bookings
             .Include(b => b.BookedByUser)
+            .Include(b => b.Court)
             .Include(b => b.Players)
                 .ThenInclude(bp => bp.PlayerUser)
             .FirstOrDefaultAsync(b => b.Id == id);
@@ -36,6 +38,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _context.Bookings
             .Include(b => b.BookedByUser)
+            .Include(b => b.Court)
             .Include(b => b.Players)
                 .ThenInclude(bp => bp.PlayerUser)
             .Where(b => b.BookedByUserId == userId)

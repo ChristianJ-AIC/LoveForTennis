@@ -40,6 +40,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.BookedByUserId).IsRequired();
+            entity.Property(e => e.CourtId).IsRequired();
             entity.Property(e => e.BookingFrom).IsRequired();
             entity.Property(e => e.BookingTo).IsRequired();
             entity.Property(e => e.Cancelled).IsRequired();
@@ -50,6 +51,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(e => e.BookedByUser)
                   .WithMany()
                   .HasForeignKey(e => e.BookedByUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Foreign key to Court
+            entity.HasOne(e => e.Court)
+                  .WithMany()
+                  .HasForeignKey(e => e.CourtId)
                   .OnDelete(DeleteBehavior.Restrict);
 
             // Navigation property for Players
