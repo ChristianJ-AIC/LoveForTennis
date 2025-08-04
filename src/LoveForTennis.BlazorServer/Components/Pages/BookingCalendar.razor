@@ -1,0 +1,627 @@
+@page "/booking-calendar"
+@using LoveForTennis.Core.Entities
+@using LoveForTennis.Core.Enums
+@using LoveForTennis.Infrastructure.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
+@inject ApplicationDbContext DbContext
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
+
+<PageTitle>Booking Calendar</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Tennis Court Booking</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Calendar Type Selection -->
+        <div class="col-12 mb-3">
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" id="simple-calendar" name="calendar-type" value="simple" @onchange="@(() => SetCalendarType("simple"))" checked="@(CalendarType == "simple")">
+                <label class="btn btn-outline-primary" for="simple-calendar">Simple Calendar</label>
+                
+                <input type="radio" class="btn-check" id="full-calendar" name="calendar-type" value="full" @onchange="@(() => SetCalendarType("full"))" checked="@(CalendarType == "full")">
+                <label class="btn btn-outline-primary" for="full-calendar">Full Calendar</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Panel - Calendar and Time Slots -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Select Date and Time</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Calendar Navigation -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <button class="btn btn-outline-secondary" @onclick="PreviousMonth">&lt;</button>
+                        <h5>@CurrentMonth.ToString("MMMM yyyy")</h5>
+                        <button class="btn btn-outline-secondary" @onclick="NextMonth">&gt;</button>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="calendar-grid">
+                        <div class="calendar-header">
+                            <div class="calendar-day-header">Sun</div>
+                            <div class="calendar-day-header">Mon</div>
+                            <div class="calendar-day-header">Tue</div>
+                            <div class="calendar-day-header">Wed</div>
+                            <div class="calendar-day-header">Thu</div>
+                            <div class="calendar-day-header">Fri</div>
+                            <div class="calendar-day-header">Sat</div>
+                        </div>
+                        
+                        @foreach (var week in GetCalendarWeeks())
+                        {
+                            <div class="calendar-week">
+                                @foreach (var day in week)
+                                {
+                                    <div class="calendar-day @GetDayClass(day)" @onclick="@(() => SelectDate(day))">
+                                        <span class="day-number">@day.Day</span>
+                                        @if (HasBookings(day))
+                                        {
+                                            <div class="booking-indicator"></div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Time Slots -->
+                    @if (SelectedDate.HasValue)
+                    {
+                        <div class="mt-4">
+                            <h6>Available Time Slots for @SelectedDate.Value.ToString("dddd, MMMM dd, yyyy")</h6>
+                            <div class="time-slots">
+                                @foreach (var slot in GetTimeSlots())
+                                {
+                                    <button class="btn time-slot @GetTimeSlotClass(slot)" 
+                                            @onclick="@(() => SelectTimeSlot(slot))"
+                                            disabled="@IsTimeSlotDisabled(slot)">
+                                        @slot.ToString("HH:mm")
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Court Selection and Booking Form -->
+        <div class="col-lg-4">
+            <!-- Court Selection -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Select Court</h5>
+                </div>
+                <div class="card-body">
+                    @if (Courts != null && Courts.Any())
+                    {
+                        @foreach (var court in Courts)
+                        {
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="court" id="court-@court.Id" 
+                                       value="@court.Id" @onchange="@(() => SelectCourt(court))" 
+                                       checked="@(SelectedCourt?.Id == court.Id)">
+                                <label class="form-check-label" for="court-@court.Id">
+                                    <strong>@court.Name</strong><br>
+                                    <small class="text-muted">@court.Description</small><br>
+                                    <small>@court.SurfaceType - @court.InOrOutdoorType</small>
+                                </label>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">Loading courts...</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Player Search and Selection -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Add Players</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" placeholder="Search players by name or email" 
+                               @bind="PlayerSearchQuery" @oninput="SearchPlayers">
+                    </div>
+                    
+                    @if (PlayerSearchResults.Any())
+                    {
+                        <div class="player-search-results mb-3">
+                            @foreach (var player in PlayerSearchResults)
+                            {
+                                <div class="player-result" @onclick="@(() => AddPlayer(player))">
+                                    @player.FirstName @player.LastName (@player.Email)
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="selected-players">
+                        <h6>Selected Players:</h6>
+                        @if (SelectedPlayers.Any())
+                        {
+                            @foreach (var player in SelectedPlayers)
+                            {
+                                <div class="selected-player">
+                                    <span>@player.FirstName @player.LastName</span>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="@(() => RemovePlayer(player))">×</button>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">No players selected</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Book Court</h5>
+                </div>
+                <div class="card-body">
+                    @if (CanCreateBooking())
+                    {
+                        <div class="booking-summary">
+                            <p><strong>Date:</strong> @SelectedDate?.ToString("dddd, MMMM dd, yyyy")</p>
+                            <p><strong>Time:</strong> @GetSelectedTimeRange()</p>
+                            <p><strong>Court:</strong> @SelectedCourt?.Name</p>
+                            <p><strong>Players:</strong> @(SelectedPlayers.Count + 1) (@CurrentUser?.FirstName @CurrentUser?.LastName + @SelectedPlayers.Count others)</p>
+                        </div>
+                        
+                        <button class="btn btn-primary w-100" @onclick="CreateBooking" disabled="@IsCreatingBooking">
+                            @if (IsCreatingBooking)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <text>Creating...</text>
+                            }
+                            else
+                            {
+                                <text>Book Court</text>
+                            }
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            Please select a date, time slot, and court to proceed with booking.
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(BookingMessage))
+                    {
+                        <div class="alert @(BookingSuccess ? "alert-success" : "alert-danger") mt-3">
+                            @BookingMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .calendar-grid {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+
+    .calendar-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .calendar-day-header {
+        padding: 10px;
+        text-align: center;
+        font-weight: 600;
+        border-right: 1px solid #dee2e6;
+    }
+
+    .calendar-day-header:last-child {
+        border-right: none;
+    }
+
+    .calendar-week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+    }
+
+    .calendar-day {
+        position: relative;
+        min-height: 60px;
+        padding: 8px;
+        border-right: 1px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .calendar-day:last-child {
+        border-right: none;
+    }
+
+    .calendar-day:hover {
+        background-color: #f8f9fa;
+    }
+
+    .calendar-day.selected {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .calendar-day.disabled {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .calendar-day.other-month {
+        color: #6c757d;
+    }
+
+    .day-number {
+        font-weight: 500;
+    }
+
+    .booking-indicator {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        width: 6px;
+        height: 6px;
+        background-color: #28a745;
+        border-radius: 50%;
+    }
+
+    .time-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+    }
+
+    .time-slot {
+        min-height: 40px;
+    }
+
+    .time-slot.selected {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
+
+    .player-search-results {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+
+    .player-result {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .player-result:hover {
+        background-color: #f8f9fa;
+    }
+
+    .player-result:last-child {
+        border-bottom: none;
+    }
+
+    .selected-player {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 8px;
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+        margin-bottom: 4px;
+    }
+</style>
+
+@code {
+    private string CalendarType = "simple";
+    private DateTime CurrentMonth = DateTime.Today;
+    private DateTime? SelectedDate;
+    private TimeOnly? SelectedTimeSlot;
+    private Court? SelectedCourt;
+    private List<Court> Courts = new();
+    private List<Booking> Bookings = new();
+    private ApplicationUser? CurrentUser;
+    
+    private string PlayerSearchQuery = "";
+    private List<ApplicationUser> PlayerSearchResults = new();
+    private List<ApplicationUser> SelectedPlayers = new();
+    
+    private bool IsCreatingBooking = false;
+    private string BookingMessage = "";
+    private bool BookingSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        // Load courts
+        Courts = await DbContext.Courts.ToListAsync();
+        
+        // Load existing bookings for the current month
+        var monthStart = new DateTime(CurrentMonth.Year, CurrentMonth.Month, 1);
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+        
+        Bookings = await DbContext.Bookings
+            .Where(b => b.BookingFrom >= monthStart && b.BookingFrom <= monthEnd && !b.Cancelled)
+            .Include(b => b.Court)
+            .Include(b => b.BookedByUser)
+            .ToListAsync();
+
+        // Get current user
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            CurrentUser = await UserManager.GetUserAsync(authState.User);
+        }
+    }
+
+    private void SetCalendarType(string type)
+    {
+        CalendarType = type;
+    }
+
+    private void PreviousMonth()
+    {
+        CurrentMonth = CurrentMonth.AddMonths(-1);
+        InvokeAsync(LoadData);
+    }
+
+    private void NextMonth()
+    {
+        CurrentMonth = CurrentMonth.AddMonths(1);
+        InvokeAsync(LoadData);
+    }
+
+    private List<List<DateTime>> GetCalendarWeeks()
+    {
+        var weeks = new List<List<DateTime>>();
+        var firstDayOfMonth = new DateTime(CurrentMonth.Year, CurrentMonth.Month, 1);
+        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        
+        // Start from the first Sunday of the week that contains the first day of the month
+        var startDate = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+        
+        var currentDate = startDate;
+        while (currentDate <= lastDayOfMonth || currentDate.DayOfWeek != DayOfWeek.Sunday)
+        {
+            var week = new List<DateTime>();
+            for (int i = 0; i < 7; i++)
+            {
+                week.Add(currentDate);
+                currentDate = currentDate.AddDays(1);
+            }
+            weeks.Add(week);
+            
+            if (currentDate > lastDayOfMonth && currentDate.DayOfWeek == DayOfWeek.Sunday)
+                break;
+        }
+        
+        return weeks;
+    }
+
+    private string GetDayClass(DateTime day)
+    {
+        var classes = new List<string>();
+        
+        if (day.Month != CurrentMonth.Month)
+            classes.Add("other-month");
+            
+        if (day < DateTime.Today)
+            classes.Add("disabled");
+            
+        if (SelectedDate?.Date == day.Date)
+            classes.Add("selected");
+            
+        return string.Join(" ", classes);
+    }
+
+    private bool HasBookings(DateTime day)
+    {
+        return Bookings.Any(b => b.BookingFrom.Date == day.Date);
+    }
+
+    private void SelectDate(DateTime date)
+    {
+        if (date < DateTime.Today || date.Month != CurrentMonth.Month)
+            return;
+            
+        SelectedDate = date;
+        SelectedTimeSlot = null; // Reset time slot selection
+    }
+
+    private List<TimeOnly> GetTimeSlots()
+    {
+        var slots = new List<TimeOnly>();
+        if (!SelectedDate.HasValue) return slots;
+
+        // Generate hourly slots from 7 AM to 10 PM
+        for (int hour = 7; hour <= 22; hour++)
+        {
+            slots.Add(new TimeOnly(hour, 0));
+        }
+
+        return slots;
+    }
+
+    private string GetTimeSlotClass(TimeOnly slot)
+    {
+        if (SelectedTimeSlot == slot)
+            return "btn-primary selected";
+        
+        return IsTimeSlotDisabled(slot) ? "btn-secondary" : "btn-outline-primary";
+    }
+
+    private bool IsTimeSlotDisabled(TimeOnly slot)
+    {
+        if (!SelectedDate.HasValue || SelectedCourt == null) return false;
+        
+        var slotDateTime = SelectedDate.Value.Add(slot.ToTimeSpan());
+        var endDateTime = slotDateTime.AddHours(1);
+        
+        // Check if there's a conflict with existing bookings
+        return Bookings.Any(b => 
+            b.CourtId == SelectedCourt.Id &&
+            b.BookingFrom < endDateTime &&
+            b.BookingTo > slotDateTime);
+    }
+
+    private void SelectTimeSlot(TimeOnly slot)
+    {
+        if (IsTimeSlotDisabled(slot)) return;
+        SelectedTimeSlot = slot;
+    }
+
+    private void SelectCourt(Court court)
+    {
+        SelectedCourt = court;
+        SelectedTimeSlot = null; // Reset time slot when court changes
+    }
+
+    private async Task SearchPlayers(ChangeEventArgs e)
+    {
+        PlayerSearchQuery = e.Value?.ToString() ?? "";
+        
+        if (string.IsNullOrWhiteSpace(PlayerSearchQuery) || PlayerSearchQuery.Length < 2)
+        {
+            PlayerSearchResults.Clear();
+            return;
+        }
+
+        var query = PlayerSearchQuery.ToLower();
+        PlayerSearchResults = await DbContext.Users
+            .Where(u => u.Id != CurrentUser!.Id && 
+                       !SelectedPlayers.Select(p => p.Id).Contains(u.Id) &&
+                       (u.FirstName.ToLower().Contains(query) || 
+                        u.LastName.ToLower().Contains(query) || 
+                        u.Email.ToLower().Contains(query)))
+            .Take(10)
+            .ToListAsync();
+    }
+
+    private void AddPlayer(ApplicationUser player)
+    {
+        if (!SelectedPlayers.Contains(player))
+        {
+            SelectedPlayers.Add(player);
+            PlayerSearchResults.Remove(player);
+            PlayerSearchQuery = "";
+        }
+    }
+
+    private void RemovePlayer(ApplicationUser player)
+    {
+        SelectedPlayers.Remove(player);
+    }
+
+    private bool CanCreateBooking()
+    {
+        return SelectedDate.HasValue && 
+               SelectedTimeSlot.HasValue && 
+               SelectedCourt != null && 
+               CurrentUser != null;
+    }
+
+    private string GetSelectedTimeRange()
+    {
+        if (!SelectedTimeSlot.HasValue) return "";
+        
+        var start = SelectedTimeSlot.Value;
+        var end = start.AddHours(1);
+        return $"{start:HH:mm} - {end:HH:mm}";
+    }
+
+    private async Task CreateBooking()
+    {
+        if (!CanCreateBooking()) return;
+
+        IsCreatingBooking = true;
+        BookingMessage = "";
+
+        try
+        {
+            var startDateTime = SelectedDate!.Value.Add(SelectedTimeSlot!.Value.ToTimeSpan());
+            var endDateTime = startDateTime.AddHours(1);
+
+            // Create the main booking
+            var booking = new Booking
+            {
+                BookedByUserId = CurrentUser!.Id,
+                CourtId = SelectedCourt!.Id,
+                BookingFrom = startDateTime,
+                BookingTo = endDateTime,
+                Created = DateTime.UtcNow,
+                BookingType = BookingType.Player,
+                Cancelled = false
+            };
+
+            DbContext.Bookings.Add(booking);
+            await DbContext.SaveChangesAsync();
+
+            // Add booking players
+            foreach (var player in SelectedPlayers)
+            {
+                var bookingPlayer = new BookingPlayer
+                {
+                    BookingId = booking.Id,
+                    PlayerUserId = player.Id,
+                    Created = DateTime.UtcNow
+                };
+                DbContext.BookingPlayers.Add(bookingPlayer);
+            }
+
+            await DbContext.SaveChangesAsync();
+
+            BookingSuccess = true;
+            BookingMessage = "Booking created successfully!";
+            
+            // Reset form
+            SelectedDate = null;
+            SelectedTimeSlot = null;
+            SelectedCourt = null;
+            SelectedPlayers.Clear();
+            
+            // Reload data to show new booking
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            BookingSuccess = false;
+            BookingMessage = $"Error creating booking: {ex.Message}";
+        }
+        finally
+        {
+            IsCreatingBooking = false;
+        }
+    }
+}
