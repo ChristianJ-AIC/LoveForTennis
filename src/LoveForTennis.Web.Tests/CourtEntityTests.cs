@@ -86,6 +86,53 @@ namespace LoveForTennis.Web.Tests
             Assert.Equal(new TimeOnly(8, 0), savedCourt.BookingAllowedFrom);
             Assert.Equal(new TimeOnly(20, 0), savedCourt.BookingAllowedTill);
             Assert.Equal(7, savedCourt.BookingsOpenForNumberOfDaysIntoTheFuture);
+            
+            // Assert new nullable properties have default null values
+            Assert.Null(savedCourt.IsDisabledFrom);
+            Assert.Null(savedCourt.IsDisabledTo);
+            Assert.Null(savedCourt.IsDisabledByUser);
+        }
+        
+        [Fact]
+        public async Task Court_Entity_CanSetDisabledProperties()
+        {
+            // Arrange
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDb_DisabledProps")
+                .Options;
+
+            using var context = new ApplicationDbContext(options);
+            await context.Database.EnsureCreatedAsync();
+            
+            var disabledFrom = DateTime.UtcNow;
+            var disabledTo = DateTime.UtcNow.AddDays(7);
+            var disabledBy = "admin@example.com";
+            
+            // Act
+            var newCourt = new Court
+            {
+                Name = "Disabled Test Court",
+                Description = "A test court with disabled properties",
+                SurfaceType = CourtSurfaceType.Hard,
+                AllowedBookingTimeType = BookingTimeType.Hour,
+                InOrOutdoorType = InOrOutdoorType.Indoor,
+                BookingAllowedFrom = new TimeOnly(9, 0),
+                BookingAllowedTill = new TimeOnly(21, 0),
+                BookingsOpenForNumberOfDaysIntoTheFuture = 14,
+                IsDisabledFrom = disabledFrom,
+                IsDisabledTo = disabledTo,
+                IsDisabledByUser = disabledBy
+            };
+            
+            context.Courts.Add(newCourt);
+            await context.SaveChangesAsync();
+            
+            // Assert
+            var savedCourt = await context.Courts.FirstOrDefaultAsync(c => c.Name == "Disabled Test Court");
+            Assert.NotNull(savedCourt);
+            Assert.Equal(disabledFrom.ToString("yyyy-MM-dd HH:mm:ss"), savedCourt.IsDisabledFrom?.ToString("yyyy-MM-dd HH:mm:ss"));
+            Assert.Equal(disabledTo.ToString("yyyy-MM-dd HH:mm:ss"), savedCourt.IsDisabledTo?.ToString("yyyy-MM-dd HH:mm:ss"));
+            Assert.Equal(disabledBy, savedCourt.IsDisabledByUser);
         }
     }
 }

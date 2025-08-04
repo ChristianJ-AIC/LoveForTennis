@@ -91,6 +91,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.BookingAllowedFrom).IsRequired();
             entity.Property(e => e.BookingAllowedTill).IsRequired();
             entity.Property(e => e.BookingsOpenForNumberOfDaysIntoTheFuture);
+            entity.Property(e => e.IsDisabledFrom);
+            entity.Property(e => e.IsDisabledTo);
+            entity.Property(e => e.IsDisabledByUser).HasMaxLength(256);
         });
 
         // Seed data

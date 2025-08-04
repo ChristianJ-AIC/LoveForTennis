@@ -13,4 +13,7 @@ public class Court
     public TimeOnly BookingAllowedFrom { get; set; }
     public TimeOnly BookingAllowedTill { get; set; }
     public int? BookingsOpenForNumberOfDaysIntoTheFuture { get; set; }
+    public DateTime? IsDisabledFrom { get; set; }
+    public DateTime? IsDisabledTo { get; set; }
+    public string? IsDisabledByUser { get; set; }
 }
